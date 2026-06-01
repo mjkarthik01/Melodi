@@ -1,2 +1,0 @@
-# Melodi
-Ecommerce website
