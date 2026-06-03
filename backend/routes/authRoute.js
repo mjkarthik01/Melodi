@@ -26,6 +26,7 @@ router.get("/admin-auth", requireSignIN, isAdmin, (req, res) => {
 
 router.put("/profile", requireSignIN, updateProfileController);
 router.get("/orders", requireSignIN, getOrdersController);
+router.get("/user-orders", requireSignIN, getOrdersController);
 router.get("/all-orders", requireSignIN, isAdmin, getAllOrdersController);
 router.put(
   "/order-status/:orderId",

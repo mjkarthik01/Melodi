@@ -6,6 +6,7 @@ const Categories = () => {
   const categories = useCategory();
   return (
     <Layout title={"All Categories"}>
+      <h1 className="text-center">All Categories</h1>
       <div className="container">
         <div className="row">
           {categories.map((c) => (
@@ -17,7 +18,6 @@ const Categories = () => {
           ))}
         </div>
       </div>
-      <h1>All Categories</h1>
     </Layout>
   );
 };

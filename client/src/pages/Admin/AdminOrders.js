@@ -23,9 +23,9 @@ const AdminOrders = () => {
   const getOrders = async () => {
     try {
       const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/auth/all-orders`,
+        `${process.env.REACT_APP_API}/api/v1/auth/all-orders?page=1&limit=20`,
       );
-      setOrders(data);
+      setOrders(data?.orders || []);
     } catch (error) {}
   };
 

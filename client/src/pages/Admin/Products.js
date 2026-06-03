@@ -11,9 +11,9 @@ const Products = () => {
   const getAllProducts = async () => {
     try {
       const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/product/get-product`,
+        `${process.env.REACT_APP_API}/api/v1/product/get-product?page=1&limit=12`,
       );
-      setProducts(data?.products);
+      setProducts(data?.products || []);
     } catch (error) {
       toast.error("Something went wrong");
     }

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../context/auth";
+import { useWishlist } from "../../context/wishlist";
 import toast from "react-hot-toast";
 import SearchInput from "../Form/SearchInput";
 import useCategory from "../../hooks/useCategory";
@@ -9,8 +10,10 @@ import { Badge } from "antd";
 
 const Header = () => {
   const [auth, setAuth] = useAuth();
-  const [cart, setCart] = useCart();
+  const [cart] = useCart();
+  const [wishlist] = useWishlist();
   const categories = useCategory();
+  const [menuOpen, setMenuOpen] = useState(false);
   const handleLogout = () => {
     setAuth({
       ...auth,
@@ -18,116 +21,102 @@ const Header = () => {
       token: "",
     });
     localStorage.removeItem("auth");
-    toast.success("Logged out Successfully");
+    toast.success("Logged out successfully");
   };
+
   return (
-    <>
-      <nav className="navbar sticky-top navbar-expand-lg bg-body-tertiary mb-4">
-        <div className="container-fluid">
+    <header className="site-header sticky-top">
+      <div className="site-header__bar container">
+        <Link to="/" className="site-header__brand">
+          <img src="/ShopLogo.png" alt="Melodi Logo" className="brand-logo" />
+          <span>Melodi</span>
+        </Link>
+        <div className="site-header__search-wrapper">
+          <SearchInput />
+        </div>
+        <div className="site-header__actions">
+          <Link to="/cart" className="site-header__cart">
+            <Badge count={cart?.length} size="small">
+              <span>Cart</span>
+            </Badge>
+          </Link>
           <button
-            className="navbar-toggler"
+            className="site-header__mobile-toggle"
             type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarTogglerDemo01"
-            aria-controls="navbarTogglerDemo01"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-label="Toggle menu"
           >
-            <span className="navbar-toggler-icon" />
+            <span />
+            <span />
+            <span />
           </button>
-          <div className="collapse navbar-collapse" id="navbarTogglerDemo01">
-            <Link to="/" className="navbar-brand">
-              <img src="/ShopLogo.png" className="App-logo" alt="logo" /> Melodi
+        </div>
+      </div>
+
+      <nav
+        className={`site-header__nav container ${menuOpen ? "is-open" : ""}`}
+      >
+        <NavLink to="/" className="site-header__link">
+          Home
+        </NavLink>
+        <div className="site-header__dropdown">
+          <button type="button" className="site-header__link">
+            Categories
+          </button>
+          <div className="mega-menu">
+            {categories?.slice(0, 8).map((category) => (
+              <Link
+                key={category._id}
+                to={`/category/${category.slug}`}
+                className="mega-menu__item"
+              >
+                {category.name}
+              </Link>
+            ))}
+            <Link to="/categories" className="mega-menu__view-all">
+              View all categories
             </Link>
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-              <SearchInput />
-              <li className="nav-item">
-                <NavLink to="/" className="nav-link">
-                  Home
-                </NavLink>
-              </li>
-
-              <li className="nav-item dropdown">
-                <Link
-                  className="nav-link dropdown-toggle"
-                  to={"/categories"}
-                  data-bs-toggle="dropdown"
-                >
-                  Category
-                </Link>
-
-                <ul className="dropdown-menu">
-                  {categories?.map((c) => (
-                    <li key={c._id}>
-                      <Link
-                        className="dropdown-item"
-                        to={`/category/${c.slug}`}
-                      >
-                        {c.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-
-              {!auth?.user ? (
-                <>
-                  <li className="nav-item">
-                    <NavLink to="/register" className="nav-link">
-                      Register
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink to="/login" className="nav-link">
-                      Login
-                    </NavLink>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="nav-item dropdown">
-                    <Link
-                      className="nav-link dropdown-toggle"
-                      data-bs-toggle="dropdown"
-                    >
-                      {auth?.user?.name}
-                    </Link>
-                    <ul className="dropdown-menu border-0">
-                      <li>
-                        <Link
-                          to={`/dashboard/${auth?.user?.role === 1 ? "admin" : "user"}`}
-                          className="dropdown-item"
-                        >
-                          {auth?.user?.role === 1
-                            ? "Dashboard"
-                            : "Order details"}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          onClick={handleLogout}
-                          to="/login"
-                          className="dropdown-item"
-                        >
-                          Logout
-                        </Link>
-                      </li>
-                    </ul>
-                  </li>
-                </>
-              )}
-              <li className="nav-item">
-                <Badge count={cart?.length} showZero>
-                  <NavLink to="/cart" className="nav-link">
-                    Cart
-                  </NavLink>
-                </Badge>
-              </li>
-            </ul>
           </div>
         </div>
+        <NavLink to="/wishlist" className="site-header__link">
+          Wishlist
+          {wishlist?.length > 0 && (
+            <sup className="site-header__badge">{wishlist.length}</sup>
+          )}
+        </NavLink>
+        {!auth?.user ? (
+          <>
+            <NavLink to="/register" className="site-header__link">
+              Register
+            </NavLink>
+            <NavLink to="/login" className="site-header__link">
+              Login
+            </NavLink>
+          </>
+        ) : (
+          <div className="site-header__dropdown">
+            <button type="button" className="site-header__link">
+              {auth.user.name}
+            </button>
+            <div className="mega-menu mega-menu--user">
+              <Link
+                to={`/dashboard/${auth.user.role === 1 ? "admin" : "user"}`}
+                className="mega-menu__item"
+              >
+                {auth.user.role === 1 ? "Admin Dashboard" : "My Dashboard"}
+              </Link>
+              <button
+                type="button"
+                className="mega-menu__item mega-menu__button"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
-    </>
+    </header>
   );
 };
 

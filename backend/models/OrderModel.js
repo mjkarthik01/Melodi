@@ -22,4 +22,9 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Add indexes for frequently queried fields
+orderSchema.index({ buyer: 1 });
+orderSchema.index({ buyer: 1, status: 1 }); // Compound index for filtering by buyer and status
+orderSchema.index({ createdAt: -1 });
+
 export default mongoose.model("Order", orderSchema);

@@ -2,47 +2,74 @@ import React from "react";
 import Layout from "../components/Layout/Layout";
 import { useSearch } from "../context/search";
 import { useNavigate } from "react-router-dom";
+import ProductCard from "../components/UI/ProductCard";
+import EmptyState from "../components/UI/EmptyState";
+import { useCart } from "../context/cart";
+import { useWishlist } from "../context/wishlist";
+import toast from "react-hot-toast";
 
 const Search = () => {
   const navigate = useNavigate();
-  const [values, setValues] = useSearch();
+  const [values] = useSearch();
+  const [cart, setCart] = useCart();
+  const [wishlist, setWishlist] = useWishlist();
+
+  const handleAddToCart = (product) => {
+    const item = { ...product, quantity: 1 };
+    const updatedCart = cart.some((cartItem) => cartItem._id === product._id)
+      ? cart.map((cartItem) =>
+          cartItem._id === product._id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem,
+        )
+      : [...cart, item];
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    toast.success("Added to cart");
+  };
+
+  const toggleWishlist = (product) => {
+    const exists = wishlist.some((item) => item._id === product._id);
+    const updated = exists
+      ? wishlist.filter((item) => item._id !== product._id)
+      : [...wishlist, { ...product, quantity: 1 }];
+    setWishlist(updated);
+    localStorage.setItem("wishlist", JSON.stringify(updated));
+    toast.success(exists ? "Removed from wishlist" : "Added to wishlist");
+  };
+
+  const isWishlisted = (product) =>
+    wishlist.some((item) => item._id === product._id);
+
   return (
-    <Layout title={"Search results"}>
-      <div className="container">
-        <div className="text-center">
+    <Layout title="Search results - Melodi">
+      <section className="container section">
+        <div className="page-heading">
           <h1>Search Results</h1>
-          <h6>
-            {values?.results.length < 1
-              ? "No products"
-              : `Found ${values?.results.length}`}
-          </h6>
-          <div className="d-flex flex-wrap ">
-            {values?.results.map((p) => (
-              <div className="card m-3" style={{ width: "18rem" }}>
-                <img
-                  className="card-img-top"
-                  src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-                  alt={p.name}
-                />
-                <div className="card-body">
-                  <h5 className="card-title">{p.name}</h5>
-                  <p className="card-text">{p.description.substring(0, 30)}</p>
-                  <p className="card-text">$ {p.price}</p>
-                  <button
-                    className="btn btn-primary ms-1"
-                    onClick={() => navigate(`/product/${p.slug}`)}
-                  >
-                    More Details
-                  </button>
-                  <button className="btn btn-secondary ms-1">
-                    ADD TO CART
-                  </button>
-                </div>
-              </div>
+          <p>{values?.results?.length || 0} product(s) found</p>
+        </div>
+
+        {values?.results?.length === 0 ? (
+          <EmptyState
+            title="No matching products"
+            description="Try another keyword or browse our main collections."
+            cta="Browse categories"
+            to="/categories"
+          />
+        ) : (
+          <div className="product-grid">
+            {values.results.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                onAddToCart={handleAddToCart}
+                onWishlist={toggleWishlist}
+                isWishlisted={isWishlisted(product)}
+              />
             ))}
           </div>
-        </div>
-      </div>
+        )}
+      </section>
     </Layout>
   );
 };

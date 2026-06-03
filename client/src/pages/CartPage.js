@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 const CartPage = () => {
   const [cart, setCart] = useCart();
-  const [auth, setAuth] = useAuth();
+  const [auth] = useAuth();
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,11 @@ const CartPage = () => {
   const totalPrice = () => {
     try {
       let total = 0;
-      cart?.map((item) => {
-        total = total + item.price;
+      cart?.forEach((item) => {
+        const qty = item.quantity || 1;
+        total += Number(item.price) * qty;
       });
-      return total.toLocaleString("en-us", {
+      return total.toLocaleString("en-US", {
         style: "currency",
         currency: "USD",
       });
@@ -37,6 +38,19 @@ const CartPage = () => {
       setCart(myCart);
       localStorage.setItem("cart", JSON.stringify(myCart));
     } catch (error) {}
+  };
+
+  const updateQuantity = (pid, qty) => {
+    try {
+      if (qty < 1) return;
+      const updated = cart.map((item) =>
+        item._id === pid ? { ...item, quantity: qty } : item,
+      );
+      setCart(updated);
+      localStorage.setItem("cart", JSON.stringify(updated));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const getToken = async () => {
@@ -56,7 +70,7 @@ const CartPage = () => {
     try {
       setLoading(true);
       const { nonce } = await instance.requestPaymentMethod();
-      const { data } = await axios.post(
+      await axios.post(
         `${process.env.REACT_APP_API}/api/v1/product/braintree/payment`,
         {
           nonce,
@@ -91,25 +105,53 @@ const CartPage = () => {
         <div className="row">
           <div className="col-md-8">
             {cart?.map((p) => (
-              <div className="row m-2 p-2 card flex-row" key={p._id}>
-                <div className="col-md-4">
+              <div
+                className="row m-2 p-2 card flex-row align-items-center"
+                key={p._id}
+              >
+                <div className="col-3 col-md-2">
                   <img
-                    className=""
                     src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
                     alt={p.name}
-                    width={"100px"}
-                    height={"100px"}
+                    className="cart-item__image"
                   />
                 </div>
-                <div className="col-md-8">
+                <div className="col-9 col-md-7">
                   <h5>{p.name}</h5>
-                  <p>{p.description.substring(0, 30)}</p>
-                  <h6>{p.price}</h6>
+                  <p className="muted">{p.description.substring(0, 60)}</p>
+                  <div className="d-flex gap-2 align-items-center">
+                    <div className="quantity-control">
+                      <button
+                        className="btn btn-light"
+                        onClick={() =>
+                          updateQuantity(p._id, (p.quantity || 1) - 1)
+                        }
+                        disabled={(p.quantity || 1) <= 1}
+                      >
+                        -
+                      </button>
+                      <span className="mx-2">{p.quantity || 1}</span>
+                      <button
+                        className="btn btn-light"
+                        onClick={() =>
+                          updateQuantity(p._id, (p.quantity || 1) + 1)
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                    <strong className="ms-3">
+                      {(Number(p.price) * (p.quantity || 1)).toLocaleString(
+                        "en-US",
+                        { style: "currency", currency: "USD" },
+                      )}
+                    </strong>
+                  </div>
+                </div>
+                <div className="col-12 col-md-3 text-end">
                   <button
                     className="btn btn-danger"
-                    onClick={() => {
-                      removeCartItem(p._id);
-                    }}
+                    onClick={() => removeCartItem(p._id)}
                   >
                     Remove
                   </button>

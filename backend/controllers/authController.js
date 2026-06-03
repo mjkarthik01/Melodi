@@ -179,10 +179,27 @@ export const updateProfileController = async (req, res) => {
 
 export const getOrdersController = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     const orders = await OrderModel.find({ buyer: req.user._id })
       .populate("products", "-photo")
-      .populate("buyer", "name");
-    res.json(orders);
+      .populate("buyer", "name")
+      .lean()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await OrderModel.countDocuments({ buyer: req.user._id });
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      orders,
+    });
   } catch (error) {
     res.status(500).send({
       success: false,
@@ -194,11 +211,27 @@ export const getOrdersController = async (req, res) => {
 
 export const getAllOrdersController = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     const orders = await OrderModel.find({})
       .populate("products", "-photo")
       .populate("buyer", "name")
+      .lean()
+      .skip(skip)
+      .limit(limit)
       .sort({ createdAt: -1 });
-    res.json(orders);
+
+    const total = await OrderModel.countDocuments();
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      orders,
+    });
   } catch (error) {
     res.status(500).send({
       success: false,

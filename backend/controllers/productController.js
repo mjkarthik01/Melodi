@@ -1,5 +1,6 @@
 import ProductModel from "../models/ProductModel.js";
 import fs from "fs";
+import { promises as fsPromises } from "fs";
 import slugify from "slugify";
 import CategoryModel from "../models/CategoryModel.js";
 import braintree from "braintree";
@@ -32,7 +33,7 @@ export const createProductController = async (req, res) => {
 
     const products = await ProductModel({ ...req.fields, slug: slugify(name) });
     if (photo) {
-      products.photo.data = fs.readFileSync(photo.path);
+      products.photo.data = await fsPromises.readFile(photo.path);
       products.photo.contentType = photo.type;
     }
     await products.save();
@@ -52,15 +53,26 @@ export const createProductController = async (req, res) => {
 
 export const getProductController = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
     const products = await ProductModel.find({})
       .populate("category")
       .select("-photo")
-      .limit(12)
+      .lean()
+      .skip(skip)
+      .limit(limit)
       .sort({ createdAt: -1 });
+
+    const total = await ProductModel.countDocuments();
+
     res.status(200).send({
       success: true,
       message: "Fetched all products",
-      totalProducts: products.length,
+      totalProducts: total,
+      page,
+      pages: Math.ceil(total / limit),
       products,
     });
   } catch (error) {
@@ -76,7 +88,8 @@ export const getSingleProductController = async (req, res) => {
   try {
     const product = await ProductModel.findOne({ slug: req.params.slug })
       .select("-photo")
-      .populate("category");
+      .populate("category")
+      .lean();
     res.status(200).send({
       success: true,
       message: "Fetched single Product successfully",
@@ -156,7 +169,7 @@ export const updateProductController = async (req, res) => {
       { new: true },
     );
     if (photo) {
-      products.photo.data = fs.readFileSync(photo.path);
+      products.photo.data = await fsPromises.readFile(photo.path);
       products.photo.contentType = photo.type;
     }
     await products.save();
@@ -177,14 +190,28 @@ export const updateProductController = async (req, res) => {
 export const productFiltersController = async (req, res) => {
   try {
     const { checked, radio } = req.body;
+    const page = Number(req.body.page) || 1;
+    const limit = Number(req.body.limit) || 12;
+    const skip = (page - 1) * limit;
+
     let args = {};
     if (checked.length > 0) args.category = checked;
     if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
-    const products = await ProductModel.find(args);
+
+    const products = await ProductModel.find(args)
+      .select("-photo")
+      .lean()
+      .skip(skip)
+      .limit(limit);
+
+    const total = await ProductModel.countDocuments(args);
+
     res.status(200).send({
       success: true,
       products,
-      total: products.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(500).send({
@@ -217,6 +244,7 @@ export const productListController = async (req, res) => {
     const page = Number(req.params.page) || 1;
     const products = await ProductModel.find({})
       .select("-photo")
+      .lean()
       .skip((page - 1) * perPage)
       .limit(perPage)
       .sort({ createdAt: -1 });
@@ -236,6 +264,10 @@ export const productListController = async (req, res) => {
 export const searchProductController = async (req, res) => {
   try {
     const { keyword } = req.params;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
     const result = await ProductModel.find({
       $or: [
         {
@@ -245,8 +277,26 @@ export const searchProductController = async (req, res) => {
           description: { $regex: keyword, $options: "i" },
         },
       ],
-    }).select("-photo");
-    res.json(result);
+    })
+      .select("-photo")
+      .lean()
+      .skip(skip)
+      .limit(limit);
+
+    const total = await ProductModel.countDocuments({
+      $or: [
+        { name: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } },
+      ],
+    });
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      result,
+    });
   } catch (error) {
     res.status(400).send({
       success: false,
@@ -264,6 +314,7 @@ export const relatedProductController = async (req, res) => {
       _id: { $ne: pid },
     })
       .select("-photo")
+      .lean()
       .limit(3)
       .populate("category");
     res.status(200).send({
@@ -280,12 +331,28 @@ export const relatedProductController = async (req, res) => {
 };
 export const productCategoryController = async (req, res) => {
   try {
-    const category = await CategoryModel.findOne({ slug: req.params.slug });
-    const products = await ProductModel.find({ category }).populate("category");
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    const category = await CategoryModel.findOne({
+      slug: req.params.slug,
+    }).lean();
+    const products = await ProductModel.find({ category: category._id })
+      .select("-photo")
+      .lean()
+      .skip(skip)
+      .limit(limit)
+      .populate("category");
+
+    const total = await ProductModel.countDocuments({ category: category._id });
     res.status(200).send({
       success: true,
       category,
       products,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(400).send({

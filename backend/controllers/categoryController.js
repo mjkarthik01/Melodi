@@ -7,13 +7,7 @@ export const createCategoryController = async (req, res) => {
     if (!name) {
       return res.status(401).send({ message: "Name is required" });
     }
-    const existingCategory = await CategoryModel.findOne({ name });
-    if (existingCategory) {
-      return res.status(200).send({
-        success: true,
-        message: "Category Already Exists",
-      });
-    }
+    // Let unique constraint handle duplicates
     const category = await new CategoryModel({
       name,
       slug: slugify(name),
@@ -56,10 +50,24 @@ export const updateCategoryController = async (req, res) => {
 
 export const categorController = async (req, res) => {
   try {
-    const category = await CategoryModel.find({});
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const category = await CategoryModel.find({})
+      .lean()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await CategoryModel.countDocuments();
+
     res.status(200).send({
       success: true,
       message: "Fetched Category successfully",
+      total,
+      page,
+      pages: Math.ceil(total / limit),
       category,
     });
   } catch (error) {
@@ -72,7 +80,9 @@ export const categorController = async (req, res) => {
 };
 export const singleCategorController = async (req, res) => {
   try {
-    const category = await CategoryModel.findOne({ slug: req.params.slug });
+    const category = await CategoryModel.findOne({
+      slug: req.params.slug,
+    }).lean();
     res.status(200).send({
       success: true,
       message: "Fetched single Category successfully",

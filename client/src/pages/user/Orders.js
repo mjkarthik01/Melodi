@@ -4,17 +4,21 @@ import UserMenu from "../../components/Layout/UserMenu";
 import axios from "axios";
 import { useAuth } from "../../context/auth";
 import moment from "moment";
+import Loader from "../../components/UI/Loader";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [auth, setAuth] = useAuth();
 
   const getOrders = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/auth/orders`,
+        `${process.env.REACT_APP_API}/api/v1/auth/user-orders?page=1&limit=10`,
       );
-      setOrders(data);
+      setOrders(data?.orders || []);
+      setLoading(false);
     } catch (error) {}
   };
 
@@ -31,54 +35,60 @@ const Orders = () => {
           </div>
           <div className="col-md-8">
             <h4>ALL ORDERS</h4>
-            {orders?.map((o, i) => {
-              return (
-                <div className="border shadow">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Buyer</th>
-                        <th scope="col">date</th>
-                        <th scope="col">Payment</th>
-                        <th scope="col">Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{i + 1}</td>
-                        <td>{o?.status}</td>
-                        <td>{o?.buyer?.name}</td>
-                        <td>{moment(o?.createAt).fromNow()}</td>
-                        <td>{o?.payment[i]?.success ? "Success" : "Failed"}</td>
-                        <td>{o?.products?.length}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="container">
-                    {o?.products?.map((p, i) => (
-                      <div className="row m-2 p-2 card flex-row" key={p._id}>
-                        <div className="col-md-4">
-                          <img
-                            className=""
-                            src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-                            alt={p.name}
-                            width={"100px"}
-                            height={"100px"}
-                          />
+            {loading ? (
+              <Loader />
+            ) : (
+              orders?.map((o, i) => {
+                return (
+                  <div className="border shadow">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">Status</th>
+                          <th scope="col">Buyer</th>
+                          <th scope="col">date</th>
+                          <th scope="col">Payment</th>
+                          <th scope="col">Quantity</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>{i + 1}</td>
+                          <td>{o?.status}</td>
+                          <td>{o?.buyer?.name}</td>
+                          <td>{moment(o?.createAt).fromNow()}</td>
+                          <td>
+                            {o?.payment[i]?.success ? "Success" : "Failed"}
+                          </td>
+                          <td>{o?.products?.length}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <div className="container">
+                      {o?.products?.map((p, i) => (
+                        <div className="row m-2 p-2 card flex-row" key={p._id}>
+                          <div className="col-md-4">
+                            <img
+                              className=""
+                              src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
+                              alt={p.name}
+                              width={"100px"}
+                              height={"100px"}
+                            />
+                          </div>
+                          <div className="col-md-8">
+                            <h5>{p.name}</h5>
+                            <p>{p.description.substring(0, 30)}</p>
+                            <h6>{p.price}</h6>
+                          </div>
                         </div>
-                        <div className="col-md-8">
-                          <h5>{p.name}</h5>
-                          <p>{p.description.substring(0, 30)}</p>
-                          <h6>{p.price}</h6>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

@@ -38,4 +38,11 @@ const productSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// Add indexes for frequently queried fields
+productSchema.index({ slug: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ name: "text" });
+productSchema.index({ category: 1, price: 1 }); // Compound index for filters
+
 export default mongoose.model("products", productSchema);

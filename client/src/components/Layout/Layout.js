@@ -7,24 +7,23 @@ import { Toaster } from "react-hot-toast";
 const Layout = ({
   children,
   title = "Melodi - Shop Now",
-  description = "Bag store",
-  keywords = "bag,handbag,purse,wallet",
-  author = "Karthik",
+  description = "Premium bag marketplace",
+  keywords = "bag, handbag, wallet, accessories",
+  author = "Melodi",
 }) => {
   return (
-    <div>
+    <div className="app-shell">
       <Helmet>
         <meta charSet="utf-8" />
-
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="description" content={description} />
         <meta name="keywords" content={keywords} />
         <meta name="author" content={author} />
-
         <title>{title}</title>
       </Helmet>
       <Header />
-      <main style={{ minHeight: "70vh" }}>
-        <Toaster />
+      <main className="app-main">
+        <Toaster position="top-right" />
         {children}
       </main>
       <Footer />
