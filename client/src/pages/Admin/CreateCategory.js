@@ -1,12 +1,11 @@
 import { Modal, Table, Button, Space, Card, Popconfirm, Row, Col } from "antd";
-
-import CategoryForm from "../../components/Form/CategoryForm";
-
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import AdminMenu from "../../components/Layout/AdminMenu";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+
+import CategoryForm from "../../components/Form/CategoryForm";
+import AdminMenu from "../../components/Layout/AdminMenu";
 import Loader from "../../components/UI/Loader";
 
 const CreateCategory = () => {
@@ -16,10 +15,33 @@ const CreateCategory = () => {
   const [selected, setSelected] = useState(null);
   const [updatedName, setUpdatedName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState("");
-  const [updatedImage, setUpdatedImage] = useState("");
-  const [refreshKey, setRefreshKey] = useState(Date.now());
+  const [image, setImage] = useState(null);
+  const [updatedImage, setUpdatedImage] = useState(null);
 
+  // Get All Categories
+  const getAllCategory = async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API}/api/v1/category/get-category`,
+      );
+
+      if (data?.success) {
+        setCategories(data.category);
+      }
+    } catch (error) {
+      toast.error("Can't get categories");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getAllCategory();
+  }, []);
+
+  // Create Category
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -38,7 +60,9 @@ const CreateCategory = () => {
       );
 
       if (data.success) {
-        setRefreshKey(Date.now());
+        toast.success("Category created");
+        setName("");
+        setImage(null);
         getAllCategory();
       }
     } catch (error) {
@@ -46,28 +70,7 @@ const CreateCategory = () => {
     }
   };
 
-  const getAllCategory = async () => {
-    try {
-      setLoading(true);
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/category/get-category`,
-      );
-
-      if (data?.success) {
-        setCategories(data?.category);
-        setLoading(false);
-      }
-    } catch (error) {
-      toast.error("Can't Get Category, Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getAllCategory();
-  }, [updatedImage]);
-
+  // Update Category
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -88,54 +91,53 @@ const CreateCategory = () => {
       if (data.success) {
         toast.success("Category updated");
         setVisible(false);
+        setUpdatedImage(null);
         getAllCategory();
       }
     } catch (error) {
       toast.error("Something went wrong");
     }
   };
-  const handleDelete = async (pId) => {
+
+  // Delete Category
+  const handleDelete = async (id) => {
     try {
       const { data } = await axios.delete(
-        `${process.env.REACT_APP_API}/api/v1/category/delete-category/${pId}`,
+        `${process.env.REACT_APP_API}/api/v1/category/delete-category/${id}`,
       );
+
       if (data.success) {
-        const updatedCategories = categories.map((cat) =>
-          cat._id === selected._id ? { ...cat, name: updatedName } : cat,
-        );
-
-        setCategories(updatedCategories);
-
-        setVisible(false);
-        toast.success("Category updated");
-
+        toast.success("Category deleted");
         getAllCategory();
       } else {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error("something went wrong");
+      toast.error("Something went wrong");
     }
   };
 
+  // Table Columns
   const columns = [
     {
       title: "#",
       key: "index",
-      width: 80,
+      width: 70,
+      responsive: ["md"],
       render: (_, __, index) => index + 1,
     },
     {
       title: "Image",
       key: "image",
-      width: 120,
+      width: 100,
+      responsive: ["sm"],
       render: (_, record) => (
         <img
           src={`${process.env.REACT_APP_API}/api/v1/category/category-photo/${record._id}?v=${record.updatedAt}`}
           alt={record.name}
           style={{
-            width: 70,
-            height: 70,
+            width: 60,
+            height: 60,
             objectFit: "cover",
             borderRadius: 8,
           }}
@@ -152,7 +154,7 @@ const CreateCategory = () => {
       key: "actions",
       width: 220,
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Button
             type="primary"
             icon={<EditOutlined />}
@@ -183,37 +185,45 @@ const CreateCategory = () => {
   ];
 
   return (
-    <div className="container-fluid">
+    <div className="container-fluid py-3">
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={6}>
+        {/* Sidebar */}
+        <Col xs={24} sm={24} md={6} lg={5}>
           <AdminMenu />
         </Col>
-        <Col xs={24} md={18} className="dashboard-content">
+
+        {/* Content */}
+        <Col xs={24} sm={24} md={18} lg={19}>
+          {/* Create Category Card */}
           <Card title="📂 Manage Categories">
             <div className="mb-3">
-              <label className="btn btn-outline-secondary col-md-12">
-                {image ? image.name : "Upload image"}
+              <label className="btn btn-outline-secondary w-100">
+                {image ? image.name : "Upload Image"}
+
                 <input
                   type="file"
-                  name="image"
+                  hidden
                   accept="image/*"
                   onChange={(e) => setImage(e.target.files[0])}
-                  hidden
                 />
               </label>
             </div>
-            <div className="mb-3">
-              {image && (
-                <div className="text-center">
-                  <img
-                    src={URL.createObjectURL(image)}
-                    alt="product_photo"
-                    height={"200px"}
-                    className="img img-responsive"
-                  />
-                </div>
-              )}
-            </div>
+
+            {image && (
+              <div className="text-center mb-3">
+                <img
+                  src={URL.createObjectURL(image)}
+                  alt="preview"
+                  style={{
+                    width: "100%",
+                    maxWidth: "250px",
+                    height: "auto",
+                    borderRadius: "8px",
+                  }}
+                />
+              </div>
+            )}
+
             <CategoryForm
               handleSubmit={handleSubmit}
               value={name}
@@ -221,7 +231,8 @@ const CreateCategory = () => {
             />
           </Card>
 
-          <Card className="dashboard-cards">
+          {/* Categories Table */}
+          <Card className="mt-3">
             {loading ? (
               <Loader />
             ) : (
@@ -229,6 +240,7 @@ const CreateCategory = () => {
                 rowKey="_id"
                 columns={columns}
                 dataSource={categories}
+                scroll={{ x: 700 }}
                 pagination={{
                   pageSize: 8,
                   showSizeChanger: false,
@@ -237,36 +249,53 @@ const CreateCategory = () => {
             )}
           </Card>
         </Col>
+      </Row>
 
-        <Modal open={visible} footer={null} onCancel={() => setVisible(false)}>
-          <div className="mb-3">
-            <label className="btn btn-outline-secondary col-md-12">
-              {updatedImage?.name || "Upload image"}
+      {/* Edit Modal */}
+      <Modal
+        open={visible}
+        footer={null}
+        onCancel={() => {
+          setVisible(false);
+          setUpdatedImage(null);
+        }}
+        width={window.innerWidth < 768 ? "95%" : 520}
+        centered
+      >
+        <div className="mb-3">
+          <label className="btn btn-outline-secondary w-100">
+            {updatedImage?.name || "Upload Image"}
 
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={(e) => setUpdatedImage(e.target.files[0])}
-              />
-            </label>
-          </div>
+            <input
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={(e) => setUpdatedImage(e.target.files[0])}
+            />
+          </label>
+        </div>
 
-          {updatedImage instanceof File && (
+        {updatedImage && (
+          <div className="text-center mb-3">
             <img
               src={URL.createObjectURL(updatedImage)}
               alt="preview"
-              height="150"
+              style={{
+                width: "100%",
+                maxWidth: "250px",
+                height: "auto",
+                borderRadius: "8px",
+              }}
             />
-          )}
+          </div>
+        )}
 
-          <CategoryForm
-            value={updatedName}
-            setValue={setUpdatedName}
-            handleSubmit={handleUpdate}
-          />
-        </Modal>
-      </Row>
+        <CategoryForm
+          value={updatedName}
+          setValue={setUpdatedName}
+          handleSubmit={handleUpdate}
+        />
+      </Modal>
     </div>
   );
 };

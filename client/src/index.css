@@ -1806,3 +1806,34 @@ a:hover {
   overflow: hidden;
   border-radius: 12px;
 }
+
+.dashboard-content {
+  width: 100%;
+}
+
+.ant-card {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .container-fluid {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .ant-table {
+    font-size: 12px;
+  }
+
+  .ant-btn {
+    width: 100%;
+  }
+
+  .ant-space {
+    width: 100%;
+  }
+
+  .ant-space-item {
+    width: 100%;
+  }
+}
