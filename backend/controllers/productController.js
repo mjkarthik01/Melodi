@@ -9,8 +9,17 @@ import gateway from "../config/braintree.js";
 
 export const createProductController = async (req, res) => {
   try {
-    const { name, slug, description, price, category, quantity, shipping } =
-      req.fields;
+    const {
+      name,
+      slug,
+      description,
+      price,
+      category,
+      discount,
+      shipping,
+      shippingCost,
+      colors,
+    } = req.fields;
     const { photo } = req.files;
 
     switch (true) {
@@ -22,8 +31,8 @@ export const createProductController = async (req, res) => {
         return res.status(500).send({ error: "price is required" });
       case !category:
         return res.status(500).send({ error: "category is required" });
-      case !quantity:
-        return res.status(500).send({ error: "quantity is required" });
+      case !discount:
+        return res.status(500).send({ error: "discount is required" });
 
       case photo && photo.size > 1000000:
         return res
@@ -31,7 +40,11 @@ export const createProductController = async (req, res) => {
           .send({ error: "Photo is required and should be less than 1MB " });
     }
 
-    const products = await ProductModel({ ...req.fields, slug: slugify(name) });
+    const products = await ProductModel({
+      ...req.fields,
+      colors: colors ? JSON.parse(colors) : [],
+      slug: slugify(name),
+    });
     if (photo) {
       products.photo.data = await fsPromises.readFile(photo.path);
       products.photo.contentType = photo.type;
@@ -70,6 +83,7 @@ export const getProductController = async (req, res) => {
     res.status(200).send({
       success: true,
       message: "Fetched all products",
+      total,
       totalProducts: total,
       page,
       pages: Math.ceil(total / limit),
@@ -138,8 +152,17 @@ export const deleteProductController = async (req, res) => {
 
 export const updateProductController = async (req, res) => {
   try {
-    const { name, slug, description, price, category, quantity, shipping } =
-      req.fields;
+    const {
+      name,
+      slug,
+      description,
+      price,
+      category,
+      discount,
+      shipping,
+      shippingCost,
+      colors,
+    } = req.fields;
     const { photo } = req.files;
 
     switch (true) {
@@ -151,8 +174,8 @@ export const updateProductController = async (req, res) => {
         return res.status(500).send({ error: "price is required" });
       case !category:
         return res.status(500).send({ error: "category is required" });
-      case !quantity:
-        return res.status(500).send({ error: "quantity is required" });
+      case !discount:
+        return res.status(500).send({ error: "discount is required" });
 
       case photo && photo.size > 1000000:
         return res
@@ -164,6 +187,7 @@ export const updateProductController = async (req, res) => {
       req.params.pid,
       {
         ...req.fields,
+        colors: colors ? JSON.parse(colors) : [],
         slug: slugify(name),
       },
       { new: true },
@@ -378,8 +402,17 @@ export const braintreePaymentController = async (req, res) => {
   try {
     const { cart, nonce } = req.body;
     let total = 0;
-    cart.map((i) => {
-      total += i.price;
+
+    cart.forEach((item) => {
+      const qty = item.discount || 1;
+
+      // Product total
+      total += Number(item.price) * qty;
+
+      // Shipping total
+      if (item.shipping) {
+        total += Number(item.shippingCost || 0) * qty;
+      }
     });
     let newTransaction = gateway.transaction.sale(
       {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import Layout from "../components/Layout/Layout";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Checkbox, Radio } from "antd";
@@ -10,7 +9,7 @@ import toast from "react-hot-toast";
 import SectionHeader from "../components/UI/SectionHeader";
 import ProductCard from "../components/UI/ProductCard";
 import EmptyState from "../components/UI/EmptyState";
-import Loader from "../components/UI/Loader";
+import AdSlider from "../components/AdSlider";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
@@ -19,7 +18,7 @@ const HomePage = () => {
   const [radio, setRadio] = useState("");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [cart, setCart] = useCart();
+  const { cart, setCart } = useCart();
   const [wishlist, setWishlist] = useWishlist();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -47,7 +46,7 @@ const HomePage = () => {
       } else {
         setProducts((prev) => [...prev, ...(data.products || [])]);
       }
-      setTotal(data?.total || 0);
+      // setTotal(data?.total || 0);
     } catch (error) {
       setLoading(false);
       console.error(error);
@@ -88,9 +87,17 @@ const HomePage = () => {
     }
   };
 
-  const addToCart = (product) => {
-    const item = { ...product, quantity: 1 };
-    const existing = cart.find((cartItem) => cartItem._id === product._id);
+  const addToCart = (product, selectedColor) => {
+    const item = {
+      ...product,
+      quantity: 1,
+      selectedColor: selectedColor || product.colors?.[0],
+    };
+    const existing = cart.find(
+      (cartItem) =>
+        cartItem._id === product._id &&
+        cartItem.selectedColor === selectedColor,
+    );
     const updatedCart = existing
       ? cart.map((cartItem) =>
           cartItem._id === product._id
@@ -117,8 +124,8 @@ const HomePage = () => {
     wishlist.some((item) => item._id === product._id);
 
   useEffect(() => {
-    getAllCategory();
     getTotal();
+    getAllCategory();
   }, []);
 
   useEffect(() => {
@@ -140,7 +147,8 @@ const HomePage = () => {
   const featuredProducts = useMemo(() => products.slice(0, 8), [products]);
 
   return (
-    <Layout title="Melodi — Premium Bags & Accessories">
+    <>
+      <AdSlider />
       <section className="hero container">
         <div className="hero__copy">
           <p className="eyebrow">New arrivals</p>
@@ -185,8 +193,6 @@ const HomePage = () => {
           }
         />
 
-        {loading && <Loader />}
-
         {!loading && products.length === 0 && (
           <EmptyState
             title="No products available"
@@ -197,17 +203,21 @@ const HomePage = () => {
         )}
 
         <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              onAddToCart={addToCart}
-              onWishlist={toggleWishlist}
-              isWishlisted={isWishlisted(product)}
-            />
-          ))}
+          {loading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <ProductCard key={i} loading={true} />
+              ))
+            : featuredProducts.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onAddToCart={addToCart}
+                  onWishlist={toggleWishlist}
+                  isWishlisted={isWishlisted(product)}
+                  loading={false}
+                />
+              ))}
         </div>
-
         {products.length > featuredProducts.length && (
           <div className="section-footer">
             <button
@@ -220,7 +230,7 @@ const HomePage = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 

@@ -1,98 +1,151 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/Layout/Layout";
 import UserMenu from "../../components/Layout/UserMenu";
 import axios from "axios";
 import { useAuth } from "../../context/auth";
 import moment from "moment";
 import Loader from "../../components/UI/Loader";
 
+import { Table, Tag, Card, Row, Col, Typography, Avatar, Space } from "antd";
+
+const { Text } = Typography;
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [auth, setAuth] = useAuth();
+  const [auth] = useAuth();
 
   const getOrders = async () => {
     try {
       setLoading(true);
+
       const { data } = await axios.get(
         `${process.env.REACT_APP_API}/api/v1/auth/user-orders?page=1&limit=10`,
       );
+
       setOrders(data?.orders || []);
       setLoading(false);
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (auth?.token) getOrders();
   }, [auth?.token]);
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Delivered":
+        return "green";
+      case "Shipped":
+        return "blue";
+      case "Processing":
+        return "orange";
+      case "Canceled":
+        return "red";
+      default:
+        return "default";
+    }
+  };
+
+  const columns = [
+    {
+      title: "#",
+      render: (_, __, index) => index + 1,
+      width: 60,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+    },
+    {
+      title: "Buyer",
+      render: (_, record) => record?.buyer?.name,
+    },
+    {
+      title: "Date",
+      render: (_, record) => moment(record?.createdAt).fromNow(),
+    },
+    {
+      title: "Payment",
+      render: (_, record) =>
+        record?.payment[0]?.success ? (
+          <Tag color="green">Success</Tag>
+        ) : (
+          <Tag color="red">Failed</Tag>
+        ),
+    },
+    {
+      title: "Products",
+      render: (_, record) => record?.products?.length,
+    },
+  ];
+
+  const expandedRowRender = (record) => {
+    return (
+      <Space orientation="vertical" style={{ width: "100%" }}>
+        {record?.products?.map((p) => (
+          <Card key={p._id} size="small">
+            <Space>
+              <Avatar
+                shape="square"
+                size={70}
+                src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
+              />
+
+              <div>
+                <Text strong>{p.name}</Text>
+                <br />
+                <Text type="secondary">
+                  {p.description?.substring(0, 60)}...
+                </Text>
+                <br />
+                <Tag color="gold">${p.price}</Tag>
+              </div>
+            </Space>
+          </Card>
+        ))}
+      </Space>
+    );
+  };
+
   return (
-    <Layout title={"Your Orders"}>
-      <div className="container-fluid p-3 dashboard">
-        <div className="row g-xl-5">
-          <div className="col-md-3">
-            <UserMenu />
-          </div>
-          <div className="col-md-8">
-            <h4>ALL ORDERS</h4>
+    <div className="container-fluid p-3">
+      <Row gutter={[16, 16]}>
+        {/* Sidebar */}
+        <Col xs={24} md={6}>
+          <UserMenu />
+        </Col>
+
+        {/* Content */}
+        <Col xs={24} md={18} className="dashboard-content">
+          <Card
+            title="🧾 Your Orders"
+            variant="borderless"
+            className="dashboard-cards"
+          >
             {loading ? (
               <Loader />
             ) : (
-              orders?.map((o, i) => {
-                return (
-                  <div className="border shadow">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Buyer</th>
-                          <th scope="col">date</th>
-                          <th scope="col">Payment</th>
-                          <th scope="col">Quantity</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>{i + 1}</td>
-                          <td>{o?.status}</td>
-                          <td>{o?.buyer?.name}</td>
-                          <td>{moment(o?.createAt).fromNow()}</td>
-                          <td>
-                            {o?.payment[i]?.success ? "Success" : "Failed"}
-                          </td>
-                          <td>{o?.products?.length}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="container">
-                      {o?.products?.map((p, i) => (
-                        <div className="row m-2 p-2 card flex-row" key={p._id}>
-                          <div className="col-md-4">
-                            <img
-                              className=""
-                              src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-                              alt={p.name}
-                              width={"100px"}
-                              height={"100px"}
-                            />
-                          </div>
-                          <div className="col-md-8">
-                            <h5>{p.name}</h5>
-                            <p>{p.description.substring(0, 30)}</p>
-                            <h6>{p.price}</h6>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })
+              <Table
+                rowKey="_id"
+                columns={columns}
+                dataSource={orders}
+                expandable={{
+                  expandedRowRender,
+                }}
+                pagination={{
+                  pageSize: 5,
+                }}
+                scroll={{ x: 800 }}
+              />
             )}
-          </div>
-        </div>
-      </div>
-    </Layout>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

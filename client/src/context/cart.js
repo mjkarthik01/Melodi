@@ -6,16 +6,38 @@ const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
   useEffect(() => {
-    let existingCartItem = localStorage.getItem("cart");
-    if (existingCartItem) setCart(JSON.parse(existingCartItem));
+    const existingCart = localStorage.getItem("cart");
+    if (existingCart) {
+      setCart(JSON.parse(existingCart));
+    }
   }, []);
 
+  const saveCart = (updatedCart) => {
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
+  const updateProductColor = (productId, color) => {
+    const updatedCart = cart.map((item) =>
+      item._id === productId ? { ...item, selectedColor: color } : item,
+    );
+
+    saveCart(updatedCart);
+  };
+
   return (
-    <CartContext.Provider value={[cart, setCart]}>
+    <CartContext.Provider
+      value={{
+        cart,
+        setCart: saveCart,
+        updateProductColor,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
 const useCart = () => useContext(CartContext);
+
 export { useCart, CartProvider };

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import UserMenu from "../../components/Layout/UserMenu";
-import Layout from "./../../components/Layout/Layout";
 import { useAuth } from "../../context/auth";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { Card, Col, Row } from "antd";
 const Profile = () => {
   const [auth, setAuth] = useAuth();
   const [name, setName] = useState("");
@@ -51,16 +51,19 @@ const Profile = () => {
     }
   };
   return (
-    <Layout title={"Your Profile"}>
-      <div className="container-fluid p-3 dashboard">
-        <div className="row g-xl-5">
-          <div className="col-md-3">
-            <UserMenu />
-          </div>
-          <div className="col-md-8">
+    <div className="container-fluid p-3 dashboard">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <UserMenu />
+        </Col>
+        <Col xs={24} md={18} className="dashboard-content">
+          <Card
+            title="👤 User Profile"
+            variant="borderless"
+            className="dashboard-cards"
+          >
             <div className="form-container">
               <form onSubmit={handleSubmit}>
-                <h4 className="title">USER PROFILE</h4>
                 <div className="mb-3">
                   <input
                     type="text"
@@ -114,15 +117,16 @@ const Profile = () => {
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary">
-                  UPDATE
+                <button type="submit" className="btn btn-primary btn-icon">
+                  <i className="bi bi-pencil-square" />
+                  <span>Update Profile</span>
                 </button>
               </form>
             </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

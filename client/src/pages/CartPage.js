@@ -1,56 +1,68 @@
-import React, { useState } from "react";
-import Layout from "../components/Layout/Layout";
-import { useCart } from "../context/cart";
-import { useAuth } from "../context/auth";
-import { useNavigate } from "react-router-dom";
-import DropIn from "braintree-web-drop-in-react";
 import axios from "axios";
-import { useEffect } from "react";
+import DropIn from "braintree-web-drop-in-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import EmptyState from "../components/UI/EmptyState";
+import SectionHeader from "../components/UI/SectionHeader";
+import { useAuth } from "../context/auth";
+import { useCart } from "../context/cart";
 
 const CartPage = () => {
-  const [cart, setCart] = useCart();
+  const { cart, setCart } = useCart();
   const [auth] = useAuth();
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const totalPrice = () => {
-    try {
-      let total = 0;
-      cart?.forEach((item) => {
-        const qty = item.quantity || 1;
-        total += Number(item.price) * qty;
-      });
-      return total.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-      });
-    } catch (error) {}
+  const getSubtotal = () => {
+    return cart.reduce(
+      (sum, item) => sum + Number(item.price) * (item.quantity || 1),
+      0,
+    );
   };
 
-  const removeCartItem = (pid) => {
-    try {
-      let myCart = [...cart];
-      let index = myCart.findIndex((item) => item._id === pid);
-      myCart.splice(index, 1);
-      setCart(myCart);
-      localStorage.setItem("cart", JSON.stringify(myCart));
-    } catch (error) {}
+  const getShippingTotal = () => {
+    return cart.reduce((sum, item) => {
+      if (item.shipping) {
+        return sum + Number(item.shippingCost || 0);
+      }
+      return sum;
+    }, 0);
   };
 
-  const updateQuantity = (pid, qty) => {
-    try {
-      if (qty < 1) return;
-      const updated = cart.map((item) =>
-        item._id === pid ? { ...item, quantity: qty } : item,
-      );
-      setCart(updated);
-      localStorage.setItem("cart", JSON.stringify(updated));
-    } catch (error) {
-      console.error(error);
-    }
+  const getGrandTotal = () => {
+    return getSubtotal() + getShippingTotal();
+  };
+
+  const formatCurrency = (amount) => {
+    return amount.toLocaleString("en-IN", {
+      style: "currency",
+      currency: "INR",
+    });
+  };
+
+  const removeCartItem = (pid, color) => {
+    const updatedCart = cart.filter(
+      (item) => !(item._id === pid && item.selectedColor === color),
+    );
+    toast.success("Removed Item Successfully");
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+  const updateQuantity = (pid, color, qty) => {
+    if (qty < 1) return;
+
+    const updated = cart.map((item) =>
+      item._id === pid && item.selectedColor === color
+        ? { ...item, quantity: qty }
+        : item,
+    );
+
+    setCart(updated);
+    localStorage.setItem("cart", JSON.stringify(updated));
   };
 
   const getToken = async () => {
@@ -88,90 +100,187 @@ const CartPage = () => {
   };
 
   return (
-    <Layout>
-      <div className="container">
-        <div className="row">
-          <div className="col-md-12">
-            <h1 className="text-center bg-light p-2 mb-1">
-              {`Hi ${auth?.token && auth?.user?.name}`}
-            </h1>
-            <h4 className="text-center">
-              {cart?.length >= 1
-                ? `You have ${cart.length} item in your cart ${auth?.token ? "" : "please login to checkout"}`
-                : "Your cart is empty"}
-            </h4>
-          </div>
+    <div className="container">
+      <div className="row">
+        <div className="col-md-12">
+          <h1
+            className="text-center p-2 mb-4"
+            style={{ background: "#b3def5be", color: "#4a386c" }}
+          >
+            {`Hi ${auth?.token && auth?.user?.name}`}
+          </h1>
         </div>
+      </div>
+      <div className="d-flex align-items-center justify-content-between">
+        <SectionHeader title="Cart" subtitle="Checkout Now" />
+        <p className="text-center p-0 m-0 text-success">
+          You have {cart.length} items in your cart
+        </p>
+      </div>
+      {cart.length === 0 ? (
+        <EmptyState
+          title="Your Cart is empty"
+          description="Browse products and Checkout Now."
+          cta="Browse categories"
+          to="/categories"
+        />
+      ) : (
         <div className="row">
           <div className="col-md-8">
-            {cart?.map((p) => (
-              <div
-                className="row m-2 p-2 card flex-row align-items-center"
-                key={p._id}
-              >
-                <div className="col-3 col-md-2">
-                  <img
-                    src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-                    alt={p.name}
-                    className="cart-item__image"
-                  />
-                </div>
-                <div className="col-9 col-md-7">
-                  <h5>{p.name}</h5>
-                  <p className="muted">{p.description.substring(0, 60)}</p>
-                  <div className="d-flex gap-2 align-items-center">
-                    <div className="quantity-control">
+            <AnimatePresence>
+              {cart?.map((p) => (
+                <motion.div
+                  key={`${p._id}-${p.selectedColor}`}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{
+                    opacity: 0,
+                    x: 100,
+                    transition: { duration: 0.3 },
+                  }}
+                  transition={{
+                    layout: {
+                      duration: 0.3,
+                      ease: "easeInOut",
+                    },
+                  }}
+                >
+                  <div
+                    key={`${p._id}-${p.selectedColor}`}
+                    className={`row m-2 p-2 card flex-row align-items-center cart-item 
+                    `}
+                  >
+                    <div className="col-3 col-md-2">
+                      <img
+                        src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
+                        alt={p.name}
+                        className="cart-item__image"
+                      />
+                    </div>
+                    <div className="col-9 col-md-7">
+                      <h5>{p.name}</h5>
+                      <p className="muted">{p.description.substring(0, 60)}</p>
+
+                      <div className="mb-3">
+                        <div className="d-flex gap-2 mt-2">
+                          <strong className="text-muted">Color</strong>
+                          <div
+                            style={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: "50%",
+                              background: p.selectedColor,
+                              cursor: "pointer",
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div className="mb-2">
+                        <div className="quantity-control">
+                          <button
+                            className="btn btn-light"
+                            onClick={() =>
+                              updateQuantity(
+                                p._id,
+                                p.selectedColor,
+                                (p.quantity || 1) - 1,
+                              )
+                            }
+                            disabled={(p.quantity || 1) <= 1}
+                          >
+                            -
+                          </button>
+                          <span className="mx-2">{p.quantity || 1}</span>
+                          <button
+                            className="btn btn-light"
+                            onClick={() =>
+                              updateQuantity(
+                                p._id,
+                                p.selectedColor,
+                                (p.quantity || 1) + 1,
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <strong className="ms-3 text-danger">
+                          {(
+                            Number(p.price) * (p.quantity || 1) +
+                            p.shippingCost
+                          ).toLocaleString("en-US", {
+                            style: "currency",
+                            currency: "INR",
+                          })}
+                        </strong>
+                      </div>
+                      <div className="mb-2">
+                        <small>
+                          Product Price: {formatCurrency(Number(p.price))}
+                        </small>
+
+                        {p.shipping && (
+                          <small className="text-muted d-block">
+                            Shipping: ₹{p.shippingCost || 0}
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-12 col-md-3 text-end">
                       <button
-                        className="btn btn-light"
-                        onClick={() =>
-                          updateQuantity(p._id, (p.quantity || 1) - 1)
-                        }
-                        disabled={(p.quantity || 1) <= 1}
+                        className="btn btn-danger"
+                        onClick={() => removeCartItem(p._id, p.selectedColor)}
                       >
-                        -
-                      </button>
-                      <span className="mx-2">{p.quantity || 1}</span>
-                      <button
-                        className="btn btn-light"
-                        onClick={() =>
-                          updateQuantity(p._id, (p.quantity || 1) + 1)
-                        }
-                      >
-                        +
+                        Remove
                       </button>
                     </div>
-                    <strong className="ms-3">
-                      {(Number(p.price) * (p.quantity || 1)).toLocaleString(
-                        "en-US",
-                        { style: "currency", currency: "USD" },
-                      )}
-                    </strong>
                   </div>
-                </div>
-                <div className="col-12 col-md-3 text-end">
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => removeCartItem(p._id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
           {cart?.length >= 1 ? (
             <div className="col-md-4 text-center">
               <h2>Cart Summary</h2>
               <p>Total | Checkout | Payment</p>
               <hr />
-              <h4>Total :{totalPrice()}</h4>
+              <h5>
+                Subtotal :
+                {getSubtotal().toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                })}
+              </h5>
+
+              <h5>
+                Shipping :
+                {getShippingTotal().toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                })}
+              </h5>
+
+              <hr />
+
+              <h4 className="text-danger">
+                Total :
+                {getGrandTotal().toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                })}
+              </h4>
               {auth?.user?.address ? (
                 <>
                   <div className="mb-3">
-                    <h4>Current Address</h4>
+                    <h4 className="text-info-emphasis text-decoration-underline">
+                      Current Address
+                    </h4>
                     <h5>{auth?.user?.address}</h5>
                     <button
-                      className="btn btn-outline-warning"
+                      className="btn btn-outline-warning mt-2"
                       onClick={() => navigate("/dashboard/user/profile")}
                     >
                       Update Address
@@ -182,14 +291,14 @@ const CartPage = () => {
                 <div className="mb-3">
                   {auth?.token ? (
                     <button
-                      className="btn btn-outline-warning"
+                      className="btn btn-outline-warning mt-2"
                       onClick={() => navigate("/dashboard/user/profile")}
                     >
                       Update Address
                     </button>
                   ) : (
                     <button
-                      className="btn btn-outline-warning"
+                      className="btn btn-outline-warning mt-2"
                       onClick={() => navigate("/login", { state: "/cart" })}
                     >
                       Please Login to Checkout
@@ -227,8 +336,8 @@ const CartPage = () => {
             ""
           )}
         </div>
-      </div>
-    </Layout>
+      )}
+    </div>
   );
 };
 

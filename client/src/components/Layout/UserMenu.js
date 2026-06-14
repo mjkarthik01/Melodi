@@ -6,18 +6,24 @@ const UserMenu = () => {
     <>
       <div className="text-center mb-3">
         <div className="list-group">
-          <h4>Dashboard</h4>
+          <h4>{/* <i className="bi bi-person-circle" /> Dashboard */}</h4>
           <NavLink
             to="/dashboard/user/profile"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Profile
+            <i className="bi bi-person-fill" />
+            <span>Profile</span>
           </NavLink>
           <NavLink
             to="/dashboard/user/orders"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Orders
+            <i className="bi bi-bag-check-fill" />
+            <span>Orders</span>
           </NavLink>
         </div>
       </div>

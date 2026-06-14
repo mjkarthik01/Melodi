@@ -4,32 +4,46 @@ import { NavLink } from "react-router-dom";
 const AdminMenu = () => {
   return (
     <>
-      <div className="text-center">
+      <div className="text-center mb-5">
         <div className="list-group">
-          <h4>Admin Panel</h4>
+          <h4>
+            <i className="bi bi-sliders2-vertical" /> Admin Panel
+          </h4>
           <NavLink
             to="/dashboard/admin/create-category"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Create Category
+            <i className="bi bi-tag-fill" />
+            <span>Create Category</span>
           </NavLink>
           <NavLink
             to="/dashboard/admin/create-product"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Create Product
+            <i className="bi bi-box-seam" />
+            <span>Create Product</span>
           </NavLink>
           <NavLink
             to="/dashboard/admin/products"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Products
+            <i className="bi bi-collection" />
+            <span>Products</span>
           </NavLink>
           <NavLink
             to="/dashboard/admin/orders"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Orders
+            <i className="bi bi-receipt" />
+            <span>Orders</span>
           </NavLink>
           {/* <NavLink
             to="/dashboard/admin/user"

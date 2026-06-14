@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react";
-import Layout from "../components/Layout/Layout";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
-import { useCart } from "../context/cart";
-import { useWishlist } from "../context/wishlist";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import SectionHeader from "../components/UI/SectionHeader";
-import ProductCard from "../components/UI/ProductCard";
+import { useParams } from "react-router-dom";
 import EmptyState from "../components/UI/EmptyState";
 import Loader from "../components/UI/Loader";
+import ProductCard from "../components/UI/ProductCard";
+import SectionHeader from "../components/UI/SectionHeader";
+import { useCart } from "../context/cart";
+import { useWishlist } from "../context/wishlist";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -16,14 +15,20 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [cart, setCart] = useCart();
+  const { cart, setCart } = useCart();
   const [wishlist, setWishlist] = useWishlist();
-  const navigate = useNavigate();
+  const [selectedColor, setSelectedColor] = useState("");
 
   useEffect(() => {
     if (params?.slug) getProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.slug]);
+
+  useEffect(() => {
+    if (product?.colors?.length) {
+      setSelectedColor(product.colors[0]);
+    }
+  }, [product]);
 
   const getProduct = async () => {
     try {
@@ -55,15 +60,33 @@ const ProductDetails = () => {
 
   const addToCart = () => {
     if (!product) return;
-    const item = { ...product, quantity };
-    const existing = cart.find((cartItem) => cartItem._id === product._id);
+    const item = {
+      ...product,
+      quantity,
+      selectedColor: selectedColor || product.colors?.[0],
+    };
+    const existing = cart.find(
+      (cartItem) =>
+        cartItem._id === product._id &&
+        cartItem.selectedColor === selectedColor,
+    );
     const updatedCart = existing
-      ? cart.map((cartItem) =>
-          cartItem._id === product._id
-            ? { ...cartItem, quantity: cartItem.quantity + quantity }
-            : cartItem,
+      ? cart.map((item) =>
+          item._id === product._id && item.selectedColor === selectedColor
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+              }
+            : item,
         )
-      : [...cart, item];
+      : [
+          ...cart,
+          {
+            ...product,
+            quantity,
+            selectedColor,
+          },
+        ];
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     toast.success("Product added to cart");
@@ -83,16 +106,14 @@ const ProductDetails = () => {
 
   if (loading || !product) {
     return (
-      <Layout>
-        <div className="container section">
-          <Loader />
-        </div>
-      </Layout>
+      <div className="container section">
+        <Loader />
+      </div>
     );
   }
 
   return (
-    <Layout title={`${product.name} — Melodi`}>
+    <>
       <section className="container product-detail section">
         <div className="product-detail__grid">
           <div className="product-detail__visual">
@@ -109,9 +130,11 @@ const ProductDetails = () => {
               Premium quality in every stitch, perfect for daily use.
             </p>
             <div className="product-detail__pricing">
-              <span className="product-detail__price">${product.price}</span>
+              <span className="product-detail__price">
+                &#8377; {product.price}
+              </span>
               <span className="product-detail__status">
-                {product.shipping ? "Fast shipping" : "Standard shipping"}
+                {product.shipping ? "Fast shipping" : "No Shipping charges"}
               </span>
             </div>
             <div className="product-detail__specs">
@@ -139,6 +162,7 @@ const ProductDetails = () => {
                   +
                 </button>
               </div>
+
               <button
                 className="btn btn-primary"
                 type="button"
@@ -146,6 +170,35 @@ const ProductDetails = () => {
               >
                 Add to cart
               </button>
+            </div>
+
+            <div className="mb-3">
+              <strong className="text-muted">Select Color</strong>
+
+              <div className="d-flex gap-2 mt-2">
+                {product?.colors?.map((color) => (
+                  <div
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    style={{
+                      width: 35,
+                      height: 35,
+                      borderRadius: "50%",
+                      background: color,
+                      cursor: "pointer",
+                      boxShadow:
+                        selectedColor === color
+                          ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
+                          : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
+                      border:
+                        selectedColor === color
+                          ? `6px solid ${color}`
+                          : "1px solid #ddd",
+                      opacity: selectedColor === color ? 1 : 0.8,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -164,10 +217,18 @@ const ProductDetails = () => {
           <div className="product-grid">
             {relatedProducts.map((product) => (
               <ProductCard
-                key={product._id}
+                key={`${product._id}-${product.selectedColor}`}
                 product={product}
-                onAddToCart={(item) => {
-                  const updated = [...cart, { ...item, quantity: 1 }];
+                onAddToCart={(item, color) => {
+                  const updated = [
+                    ...cart,
+                    {
+                      ...item,
+                      quantity: 1,
+                      selectedColor: color || item.colors?.[0],
+                    },
+                  ];
+
                   setCart(updated);
                   localStorage.setItem("cart", JSON.stringify(updated));
                   toast.success("Added best match to cart");
@@ -179,7 +240,7 @@ const ProductDetails = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </>
   );
 };
 

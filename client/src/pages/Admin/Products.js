@@ -1,60 +1,78 @@
-import React, { useEffect, useState } from "react";
-import AdminMenu from "../../components/Layout/AdminMenu";
-import Layout from "../../components/Layout/Layout";
-import toast from "react-hot-toast";
+import { Card, Col, Row, Pagination } from "antd";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
+import AdminMenu from "../../components/Layout/AdminMenu";
+import ProductCard from "../../components/UI/ProductCard";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+  const limit = 12;
 
-  const getAllProducts = async () => {
+  const getAllProducts = async (currentPage = 1) => {
     try {
+      setLoading(true);
+
       const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/product/get-product?page=1&limit=12`,
+        `${process.env.REACT_APP_API}/api/v1/product/get-product?page=${currentPage}&limit=${limit}`,
       );
+
       setProducts(data?.products || []);
+      setTotal(data?.total || 0);
+      setPages(data?.pages || 0);
+      setPage(currentPage);
     } catch (error) {
       toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
-
   useEffect(() => {
-    getAllProducts();
-  });
+    getAllProducts(1);
+  }, []);
 
   return (
-    <Layout>
-      <div className="row">
-        <div className="col-md-3">
+    <div className="container-fluid">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
           <AdminMenu />
-        </div>
-        <div className="col-md-9">
-          <h1 className="text-center">All Products List</h1>
-          <div className="d-flex flex-wrap">
-            {products?.map((p) => (
-              <Link
-                key={p._id}
-                to={`/dashboard/admin/product/${p.slug}`}
-                className="product-link"
-              >
-                <div className="card m-3" style={{ width: "18rem" }}>
-                  <img
-                    className="card-img-top"
-                    src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-                    alt={p.name}
-                  />
-                  <div className="card-body">
-                    <h5 className="card-title">{p.name}</h5>
-                    <p className="card-text">{p.description}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </div>
-    </Layout>
+        </Col>
+
+        <Col xs={24} md={18} className="dashboard-content">
+          <Card title="🛍️ All Products" className="dashboard-cards">
+            <div className="product-grid">
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <ProductCard key={i} loading={true} />
+                  ))
+                : products.map((product) => (
+                    <Link
+                      key={product._id}
+                      to={`/dashboard/admin/product/${product.slug}`}
+                    >
+                      <ProductCard product={product} loading={false} />
+                    </Link>
+                  ))}
+            </div>
+
+            {/* Pagination */}
+            <div style={{ marginTop: 20, textAlign: "center" }}>
+              <Pagination
+                current={page}
+                pageSize={limit}
+                total={pages * limit}
+                onChange={(p) => getAllProducts(p)}
+              />
+            </div>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

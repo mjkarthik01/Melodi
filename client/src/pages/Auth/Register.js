@@ -1,12 +1,9 @@
 import React, { useState } from "react";
-import Layout from "../../components/Layout/Layout";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/auth";
 
 const Register = () => {
-  const [auth, setAuth] = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,85 +33,84 @@ const Register = () => {
   };
 
   return (
-    <Layout title="Register">
-      <div className="register">
-        <h1>Register Page</h1>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                type="text"
-                className="form-control"
-                id="exampleInputName1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                className="form-control"
-                id="exampleInputEmail1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                className="form-control"
-                id="exampleInputPassword1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                type="text"
-                className="form-control"
-                id="exampleInputPhone1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                type="text"
-                className="form-control"
-                id="exampleInputAddress1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Enter secret key"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                type="text"
-                className="form-control"
-                id="exampleInputAddress1"
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Register
-            </button>
+    <div className="register">
+      <form onSubmit={handleSubmit}>
+        <div>
+          <div className="form-group mb-3">
+            <h3 className="text-center mb-4">Register Page</h3>
+            <input
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              type="text"
+              className="form-control"
+              id="exampleInputName1"
+              required
+            />
           </div>
-        </form>
-      </div>
-    </Layout>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              className="form-control"
+              id="exampleInputEmail1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              className="form-control"
+              id="exampleInputPassword1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              type="text"
+              className="form-control"
+              id="exampleInputPhone1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              type="text"
+              className="form-control"
+              id="exampleInputAddress1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Enter secret key"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              type="text"
+              className="form-control"
+              id="exampleInputAddress1"
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-icon">
+            <i className="bi bi-person-plus-fill" />
+            <span>Register</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

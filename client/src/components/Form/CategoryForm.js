@@ -12,8 +12,9 @@ const CategoryForm = ({ handleSubmit, value, setValue }) => {
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
-          <button className="btn btn-primary mt-3" type="submit">
-            Submit
+          <button className="btn btn-primary btn-icon mt-3" type="submit">
+            <i className="bi bi-plus-circle-fill" />
+            <span>Add Category</span>
           </button>
         </div>
       </form>

@@ -9,6 +9,7 @@ import "antd/dist/reset.css";
 import { SearchProvider } from "./context/search";
 import { CartProvider } from "./context/cart";
 import { WishlistProvider } from "./context/wishlist";
+import ScrollToTop from "./components/ScrollToTop";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <AuthProvider>
@@ -16,6 +17,7 @@ root.render(
       <CartProvider>
         <WishlistProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <App />
           </BrowserRouter>
         </WishlistProvider>

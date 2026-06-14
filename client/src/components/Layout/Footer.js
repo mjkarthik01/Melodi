@@ -36,8 +36,9 @@ const Footer = () => {
               placeholder="Enter your email"
               aria-label="Subscribe email"
             />
-            <button type="button" className="btn btn-primary">
-              Subscribe
+            <button type="button" className="btn btn-primary btn-icon">
+              <i className="bi bi-send-fill" />
+              <span>Subscribe</span>
             </button>
           </form>
         </div>

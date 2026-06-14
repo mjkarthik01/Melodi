@@ -2,7 +2,6 @@ import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import Layout from "../../components/Layout/Layout";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -29,53 +28,52 @@ const ForgotPassword = () => {
     }
   };
   return (
-    <Layout title="Forgot Password">
-      <div className="login">
-        <h1>Reset Password</h1>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                className="form-control"
-                id="exampleInputEmail1"
-                required
-              />
-            </div>
-
-            <div className="form-group mb-3">
-              <input
-                placeholder="Enter the secret key"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                type="text"
-                className="form-control"
-                id="exampleInputPassword1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                type="password"
-                className="form-control"
-                id="exampleInputPassword1"
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Reset
-            </button>
+    <div className="login">
+      <h1>Reset Password</h1>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              className="form-control"
+              id="exampleInputEmail1"
+              required
+            />
           </div>
-        </form>
-      </div>
-    </Layout>
+
+          <div className="form-group mb-3">
+            <input
+              placeholder="Enter the secret key"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              type="text"
+              className="form-control"
+              id="exampleInputPassword1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              type="password"
+              className="form-control"
+              id="exampleInputPassword1"
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-icon">
+            <i className="bi bi-arrow-clockwise" />
+            <span>Reset Password</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

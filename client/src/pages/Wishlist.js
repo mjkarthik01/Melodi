@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "../components/Layout/Layout";
 import ProductCard from "../components/UI/ProductCard";
 import EmptyState from "../components/UI/EmptyState";
 import SectionHeader from "../components/UI/SectionHeader";
@@ -9,7 +8,7 @@ import toast from "react-hot-toast";
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useWishlist();
-  const [cart, setCart] = useCart();
+  const { cart, setCart } = useCart();
 
   const toggleWishlist = (product) => {
     const exists = wishlist.some((item) => item._id === product._id);
@@ -21,9 +20,17 @@ const Wishlist = () => {
     toast.success(exists ? "Removed from wishlist" : "Added to wishlist");
   };
 
-  const addToCart = (product) => {
-    const item = { ...product, quantity: 1 };
-    const existing = cart.find((cartItem) => cartItem._id === product._id);
+  const addToCart = (product, selectedColor) => {
+    const item = {
+      ...product,
+      quantity: 1,
+      selectedColor: selectedColor || product.colors?.[0],
+    };
+    const existing = cart.find(
+      (cartItem) =>
+        cartItem._id === product._id &&
+        cartItem.selectedColor === selectedColor,
+    );
     const updatedCart = existing
       ? cart.map((cartItem) =>
           cartItem._id === product._id
@@ -37,31 +44,29 @@ const Wishlist = () => {
   };
 
   return (
-    <Layout title="Your Wishlist">
-      <section className="container section">
-        <SectionHeader title="Your Wishlist" subtitle="Saved for later" />
-        {wishlist.length === 0 ? (
-          <EmptyState
-            title="Your wishlist is empty"
-            description="Browse products and save your favorites here."
-            cta="Browse categories"
-            to="/categories"
-          />
-        ) : (
-          <div className="product-grid">
-            {wishlist.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                onAddToCart={addToCart}
-                onWishlist={toggleWishlist}
-                isWishlisted={true}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </Layout>
+    <section className="container section">
+      <SectionHeader title="Your Wishlist" subtitle="Saved for later" />
+      {wishlist.length === 0 ? (
+        <EmptyState
+          title="Your wishlist is empty"
+          description="Browse products and save your favorites here."
+          cta="Browse categories"
+          to="/categories"
+        />
+      ) : (
+        <div className="product-grid">
+          {wishlist.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              onAddToCart={addToCart}
+              onWishlist={toggleWishlist}
+              isWishlisted={true}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 };
 

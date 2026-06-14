@@ -1,7 +1,5 @@
 import React from "react";
-import Layout from "../components/Layout/Layout";
 import { useSearch } from "../context/search";
-import { useNavigate } from "react-router-dom";
 import ProductCard from "../components/UI/ProductCard";
 import EmptyState from "../components/UI/EmptyState";
 import { useCart } from "../context/cart";
@@ -9,14 +7,22 @@ import { useWishlist } from "../context/wishlist";
 import toast from "react-hot-toast";
 
 const Search = () => {
-  const navigate = useNavigate();
   const [values] = useSearch();
-  const [cart, setCart] = useCart();
+  const { cart, setCart } = useCart();
   const [wishlist, setWishlist] = useWishlist();
 
-  const handleAddToCart = (product) => {
-    const item = { ...product, quantity: 1 };
-    const updatedCart = cart.some((cartItem) => cartItem._id === product._id)
+  const addToCart = (product, selectedColor) => {
+    const item = {
+      ...product,
+      quantity: 1,
+      selectedColor: selectedColor || product.colors?.[0],
+    };
+    const existing = cart.find(
+      (cartItem) =>
+        cartItem._id === product._id &&
+        cartItem.selectedColor === selectedColor,
+    );
+    const updatedCart = existing
       ? cart.map((cartItem) =>
           cartItem._id === product._id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
@@ -42,35 +48,33 @@ const Search = () => {
     wishlist.some((item) => item._id === product._id);
 
   return (
-    <Layout title="Search results - Melodi">
-      <section className="container section">
-        <div className="page-heading">
-          <h1>Search Results</h1>
-          <p>{values?.results?.length || 0} product(s) found</p>
-        </div>
+    <section className="container section">
+      <div className="page-heading">
+        <h1>Search Results</h1>
+        <p>{values?.results?.length || 0} product(s) found</p>
+      </div>
 
-        {values?.results?.length === 0 ? (
-          <EmptyState
-            title="No matching products"
-            description="Try another keyword or browse our main collections."
-            cta="Browse categories"
-            to="/categories"
-          />
-        ) : (
-          <div className="product-grid">
-            {values.results.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                onAddToCart={handleAddToCart}
-                onWishlist={toggleWishlist}
-                isWishlisted={isWishlisted(product)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-    </Layout>
+      {values?.results?.length === 0 ? (
+        <EmptyState
+          title="No matching products"
+          description="Try another keyword or browse our main collections."
+          cta="Browse categories"
+          to="/categories"
+        />
+      ) : (
+        <div className="product-grid">
+          {values.results.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              onAddToCart={addToCart}
+              onWishlist={toggleWishlist}
+              isWishlisted={isWishlisted(product)}
+            />
+          ))}
+        </div>
+      )}
+    </section>
   );
 };
 

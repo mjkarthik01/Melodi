@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Layout from "../../components/Layout/Layout";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -33,51 +32,51 @@ const Login = () => {
     }
   };
   return (
-    <Layout title="Login">
-      <div className="login">
-        <h1>Login Page</h1>
-        <form onSubmit={handleSubmit}>
-          <div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                className="form-control"
-                id="exampleInputEmail1"
-                required
-              />
-            </div>
-            <div className="form-group mb-3">
-              <input
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                className="form-control"
-                id="exampleInputPassword1"
-                required
-              />
-            </div>
-            <div className="mb-3">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  navigate("/forgot-password");
-                }}
-              >
-                Forgot Password
-              </button>
-            </div>
-            <button type="submit" className="btn btn-primary">
-              Login
+    <div className="login">
+      <form onSubmit={handleSubmit}>
+        <div>
+          <div className="form-group mb-3">
+            <h3 className="text-center mb-3">Login Page</h3>
+            <input
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              className="form-control"
+              id="exampleInputEmail1"
+              required
+            />
+          </div>
+          <div className="form-group mb-3">
+            <input
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              className="form-control"
+              id="exampleInputPassword1"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-primary btn-icon">
+            <i className="bi bi-box-arrow-in-right" />
+            <span>Login</span>
+          </button>
+          <div className="mb-3">
+            <button
+              type="button"
+              className="btn btn-outline-btn-outline-light btn-icon"
+              onClick={() => {
+                navigate("/forgot-password");
+              }}
+            >
+              <i className="bi bi-key-fill" />
+              <span>Forgot Password</span>
             </button>
           </div>
-        </form>
-      </div>
-    </Layout>
+        </div>
+      </form>
+    </div>
   );
 };
 

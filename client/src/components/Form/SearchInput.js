@@ -1,15 +1,16 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useSearch } from "../../context/search";
 
-const SearchInput = () => {
+const SearchInput = ({ onClose }) => {
   const [values, setValues] = useSearch();
   const [suggestions, setSuggestions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const boxRef = useRef(null);
 
   useEffect(() => {
     const loadSuggestions = async () => {
@@ -31,6 +32,20 @@ const SearchInput = () => {
     };
     loadSuggestions();
   }, [values.keyword]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (boxRef.current && !boxRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     try {
@@ -57,44 +72,52 @@ const SearchInput = () => {
 
   return (
     <div
-      className="search-box"
+      className="search-overlay"
       onBlur={() => setTimeout(() => setIsOpen(false), 120)}
     >
-      <form className="search-box__form" role="search" onSubmit={handleSubmit}>
-        <input
-          className="search-box__input"
-          type="search"
-          placeholder="Search products, categories..."
-          aria-label="Search"
-          value={values.keyword}
-          onFocus={() => setIsOpen(true)}
-          onChange={(e) => {
-            setValues({ ...values, keyword: e.target.value });
-            setIsOpen(true);
-          }}
-        />
-        <button className="search-box__button" type="submit">
-          Search
-        </button>
-      </form>
-      {isOpen && (suggestions?.length > 0 || loading) && (
-        <div className="search-box__suggestions">
-          {loading ? (
-            <div className="search-box__item">Searching...</div>
-          ) : (
-            suggestions.map((item) => (
-              <button
-                key={item._id}
-                type="button"
-                className="search-box__item"
-                onClick={() => handleSelectSuggestion(item)}
-              >
-                {item.name}
-              </button>
-            ))
-          )}
-        </div>
-      )}
+      <div className="search-box" ref={boxRef}>
+        <form
+          className="search-box__form"
+          role="search"
+          onSubmit={handleSubmit}
+        >
+          <input
+            autoFocus
+            className="search-box__input"
+            type="search"
+            placeholder="Search products, categories..."
+            value={values.keyword}
+            onFocus={() => setIsOpen(true)}
+            onChange={(e) => {
+              setValues({ ...values, keyword: e.target.value });
+              setIsOpen(true);
+            }}
+          />
+
+          <button type="submit" className="search-box__button">
+            <i className="bi bi-search" />
+          </button>
+        </form>
+
+        {isOpen && (
+          <div className="search-box__suggestions">
+            {loading ? (
+              <div className="search-box__item">Searching...</div>
+            ) : (
+              suggestions.map((item) => (
+                <button
+                  key={item._id}
+                  type="button"
+                  className="search-box__item"
+                  onClick={() => handleSelectSuggestion(item)}
+                >
+                  {item.name}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/Layout/Layout";
 import AdminMenu from "../../components/Layout/AdminMenu";
-import { Select } from "antd";
+import { Button, Card, Col, ColorPicker, Row, Select, Tag } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -15,9 +14,12 @@ const UpdateProduct = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [discount, setDiscount] = useState("");
   const [shipping, setShipping] = useState("");
   const [photo, setPhoto] = useState("");
+  const [shippingCost, setShippingCost] = useState(0);
+  const [color, setColor] = useState("#1677ff");
+  const [colors, setColors] = useState([]);
   const [id, setId] = useState("");
 
   const getSingleProduct = async () => {
@@ -29,10 +31,22 @@ const UpdateProduct = () => {
       setId(data.product._id);
       setDescription(data.product.description);
       setPrice(data.product.price);
-      setQuantity(data.product.quantity);
+      setDiscount(data.product.discount);
       setShipping(data.product.shipping);
+      setShippingCost(data.product.shippingCost || 0);
       setCategory(data.product.category._id);
+      setColors(Array.isArray(data.product.colors) ? data.product.colors : []);
     } catch (error) {}
+  };
+
+  const addColor = () => {
+    if (!colors.includes(color)) {
+      setColors([...colors, color]);
+    }
+  };
+
+  const removeColor = (colorToRemove) => {
+    setColors(colors.filter((c) => c !== colorToRemove));
   };
 
   useEffect(() => {
@@ -66,9 +80,12 @@ const UpdateProduct = () => {
       productData.append("name", name);
       productData.append("description", description);
       productData.append("price", price);
-      productData.append("quantity", quantity);
+      productData.append("discount", discount);
       productData.append("category", category);
       productData.append("shipping", shipping);
+      productData.append("shippingCost", shippingCost);
+      productData.append("colors", JSON.stringify(colors));
+
       if (photo) productData.append("photo", photo);
 
       const { data } = await axios.put(
@@ -89,10 +106,6 @@ const UpdateProduct = () => {
 
   const handleDelete = async () => {
     try {
-      let answer = window.prompt(
-        "Are you sure, you want to delete this product?",
-      );
-      if (!answer) return;
       await axios.delete(
         `${process.env.REACT_APP_API}/api/v1/product/delete-product/${id}`,
       );
@@ -103,14 +116,13 @@ const UpdateProduct = () => {
     }
   };
   return (
-    <Layout title={"Dashboard-Update Products"}>
-      <div className="container-fluid">
-        <div className="row">
-          <div className="col-md-3">
-            <AdminMenu />
-          </div>
-          <div className="col-md-9">
-            <h1>Update Product</h1>
+    <div className="container-fluid">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <AdminMenu />
+        </Col>
+        <Col xs={24} md={18} className="dashboard-content">
+          <Card title="📦 Update Product" className="dashboard-cards">
             <div className="m-1 w-75">
               <Select
                 variant="borderless"
@@ -192,42 +204,98 @@ const UpdateProduct = () => {
               <div className="mb-3">
                 <input
                   type="text"
-                  value={quantity}
-                  placeholder="Quantity"
+                  value={discount}
+                  placeholder="Discount"
                   className="form-control"
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setDiscount(e.target.value)}
                 />
               </div>
-              <div className="mb-3">
+              <div className="mb-3 d-flex">
                 <Select
-                  type="text"
                   value={shipping}
-                  variant="borderless"
                   size="large"
-                  showSearch
                   placeholder="Select Shipping"
-                  className="form-select mb-3"
+                  className="form-control w-50"
                   onChange={(value) => setShipping(value)}
-                >
-                  <Option value={false}>No</Option>
-                  <Option value={true}>Yes</Option>
-                </Select>
+                  options={[
+                    {
+                      value: false,
+                      label: "No",
+                    },
+                    {
+                      value: true,
+                      label: "Yes",
+                    },
+                  ]}
+                />
+
+                {shipping === true && (
+                  <div className="mx-3 w-25">
+                    <input
+                      type="number"
+                      value={shippingCost}
+                      placeholder="Shipping Cost"
+                      className="form-control"
+                      onChange={(e) => setShippingCost(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
               <div className="mb-3">
-                <button className="btn btn-primary" onClick={handleUpdate}>
-                  UPDATE PRODUCT
-                </button>
+                <h6>Available Colors</h6>
+
+                <div className="d-flex align-items-center gap-2">
+                  <ColorPicker
+                    value={color}
+                    onChange={(value) => setColor(value.toHexString())}
+                  />
+
+                  <Button onClick={addColor}>Add Color</Button>
+                </div>
+
+                <div className="mt-3 d-flex align-items-center justify-content-start gap-2">
+                  {colors?.map((c) => (
+                    <Tag
+                      key={c}
+                      closable
+                      onClose={() => removeColor(c)}
+                      style={{
+                        background: c,
+                        color: "#fff",
+                        border: "none",
+                        margin: 8,
+                      }}
+                    >
+                      {c}
+                    </Tag>
+                  ))}
+                </div>
               </div>
-              <div className="mb-3">
-                <button className="btn btn-danger" onClick={handleDelete}>
-                  DELETE PRODUCT
-                </button>
+              <div className="d-flex align-items-center gap-4 justify-content-lg-start">
+                <div className="mb-3">
+                  <button
+                    className="btn btn-primary btn-icon"
+                    onClick={handleUpdate}
+                  >
+                    <i className="bi bi-pencil-square" />
+                    <span>Update Product</span>
+                  </button>
+                </div>
+                <div className="mb-3">
+                  <button
+                    className="btn btn-danger btn-icon"
+                    onClick={handleDelete}
+                  >
+                    <i className="bi bi-trash-fill" />
+                    <span>Delete Product</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

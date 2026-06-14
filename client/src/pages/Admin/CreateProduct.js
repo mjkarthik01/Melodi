@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/Layout/Layout";
 import AdminMenu from "../../components/Layout/AdminMenu";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { Select } from "antd";
+import { Card, Col, Row, Select } from "antd";
 import { useNavigate } from "react-router-dom";
+import { ColorPicker, Button, Tag } from "antd";
 const { Option } = Select;
 
 const CreateProduct = () => {
@@ -14,9 +14,12 @@ const CreateProduct = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [shipping, setShipping] = useState("");
+  const [discount, setDiscount] = useState("");
+  const [shipping, setShipping] = useState(undefined);
   const [photo, setPhoto] = useState("");
+  const [shippingCost, setShippingCost] = useState("");
+  const [color, setColor] = useState("#1677ff");
+  const [colors, setColors] = useState([]);
 
   const getAllCategory = async () => {
     try {
@@ -32,30 +35,45 @@ const CreateProduct = () => {
     }
   };
 
+  const addColor = () => {
+    if (!colors.includes(color)) {
+      setColors([...colors, color]);
+    }
+  };
+
+  const removeColor = (colorToRemove) => {
+    setColors(colors.filter((c) => c !== colorToRemove));
+  };
+
   useEffect(() => {
     getAllCategory();
   }, []);
-
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
+
     try {
       const productData = new FormData();
+
       productData.append("name", name);
       productData.append("description", description);
       productData.append("price", price);
-      productData.append("quantity", quantity);
+      productData.append("discount", discount);
       productData.append("photo", photo);
       productData.append("category", category);
       productData.append("shipping", shipping);
-      const { data } = axios.post(
+      productData.append("shippingCost", shippingCost);
+      productData.append("colors", JSON.stringify(colors));
+
+      const { data } = await axios.post(
         `${process.env.REACT_APP_API}/api/v1/product/create-product`,
         productData,
       );
+
       if (data?.success) {
-        toast.error(data?.message);
-      } else {
-        toast.success("Product Created Successfully");
+        toast.success(data?.message || "Product Created Successfully");
         navigate("/dashboard/admin/products");
+      } else {
+        toast.error(data?.message || "Failed to create product");
       }
     } catch (error) {
       toast.error("Something went wrong");
@@ -63,21 +81,20 @@ const CreateProduct = () => {
   };
 
   return (
-    <Layout title={"Dashboard-Create Products"}>
-      <div className="container-fluid">
-        <div className="row">
-          <div className="col-md-3">
-            <AdminMenu />
-          </div>
-          <div className="col-md-9">
-            <h1>Create Product</h1>
+    <div className="container-fluid">
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={6}>
+          <AdminMenu />
+        </Col>
+        <Col xs={24} md={18} className="dashboard-content">
+          <Card title="📦 Create Products" className="dashboard-cards">
             <div className="m-1 w-75">
               <Select
                 variant="borderless"
                 placeholder="select a category"
                 size="large"
                 showSearch
-                className="form-select mb-3"
+                className="form-control mb-3"
                 onChange={(value) => {
                   setCategory(value);
                 }}
@@ -142,37 +159,87 @@ const CreateProduct = () => {
               <div className="mb-3">
                 <input
                   type="text"
-                  value={quantity}
-                  placeholder="Quantity"
+                  value={discount}
+                  placeholder="Discount"
                   className="form-control"
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setDiscount(e.target.value)}
                 />
               </div>
-              <div className="mb-3">
+              <div className="mb-3 d-flex">
                 <Select
-                  type="text"
                   value={shipping}
-                  variant="borderless"
                   size="large"
-                  showSearch
                   placeholder="Select Shipping"
-                  className="form-select mb-3"
+                  className="form-control w-50"
                   onChange={(value) => setShipping(value)}
-                >
-                  <Option value={false}>No</Option>
-                  <Option value={true}>Yes</Option>
-                </Select>
+                  options={[
+                    {
+                      value: false,
+                      label: "No",
+                    },
+                    {
+                      value: true,
+                      label: "Yes",
+                    },
+                  ]}
+                />
+
+                {shipping === true && (
+                  <div className="mx-3 w-25">
+                    <input
+                      type="number"
+                      value={shippingCost}
+                      placeholder="Shipping Cost"
+                      className="form-control"
+                      onChange={(e) => setShippingCost(e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
               <div className="mb-3">
-                <button className="btn btn-primary" onClick={handleCreate}>
-                  CREATE PRODUCT
+                <h6>Available Colors</h6>
+
+                <div className="d-flex align-items-center gap-2">
+                  <ColorPicker
+                    value={color}
+                    onChange={(value) => setColor(value.toHexString())}
+                  />
+
+                  <Button onClick={addColor}>Add Color</Button>
+                </div>
+
+                <div className="mt-3">
+                  {colors.map((c) => (
+                    <Tag
+                      key={c}
+                      closable
+                      onClose={() => removeColor(c)}
+                      style={{
+                        background: c,
+                        color: "#fff",
+                        border: "none",
+                        margin: 8,
+                      }}
+                    >
+                      {c}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-3">
+                <button
+                  className="btn btn-primary btn-icon"
+                  onClick={handleCreate}
+                >
+                  <i className="bi bi-plus-circle-fill" />
+                  <span>Create Product</span>
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </Layout>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   );
 };
 
