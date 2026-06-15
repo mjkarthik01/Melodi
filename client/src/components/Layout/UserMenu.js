@@ -6,7 +6,6 @@ const UserMenu = () => {
     <>
       <div className="text-center mb-3">
         <div className="list-group">
-          <h4>{/* <i className="bi bi-person-circle" /> Dashboard */}</h4>
           <NavLink
             to="/dashboard/user/profile"
             className={({ isActive }) =>

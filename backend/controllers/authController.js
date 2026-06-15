@@ -259,3 +259,71 @@ export const orderStatusController = async (req, res) => {
     });
   }
 };
+
+export const getMonthlySalesController = async (req, res) => {
+  try {
+    const orders = await OrderModel.find({
+      status: "Delivered",
+    })
+      .populate("products", "price")
+      .lean();
+
+    const monthlySales = {};
+
+    orders.forEach((order) => {
+      const date = new Date(order.createdAt);
+
+      const month = date.toLocaleString("default", {
+        month: "short",
+      });
+
+      const year = date.getFullYear();
+
+      const key = `${month} ${year}`;
+
+      const orderTotal = order.products.reduce(
+        (sum, product) => sum + (product.price || 0),
+        0,
+      );
+
+      monthlySales[key] = (monthlySales[key] || 0) + orderTotal;
+    });
+
+    const result = Object.keys(monthlySales).map((month) => ({
+      month,
+      sales: monthlySales[month],
+    }));
+
+    res.status(200).send({
+      success: true,
+      sales: result,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({
+      success: false,
+      message: "Error fetching sales data",
+      error,
+    });
+  }
+};
+
+export const getAllUsersController = async (req, res) => {
+  try {
+    const users = await UserModel.find({})
+      .select("name phone")
+      .sort({ createdAt: -1 });
+
+    res.status(200).send({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error fetching users",
+      error,
+    });
+  }
+};

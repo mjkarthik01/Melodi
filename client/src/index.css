@@ -1602,7 +1602,7 @@ a:hover {
       rgba(150, 100, 255, 0.12) 70%,
       rgba(255, 255, 255, 0.04) 100%
     ),
-    linear-gradient(135deg, #00081f, #001040, #00195c);
+    linear-gradient(135deg, #00081f, #001040, #000e32);
 }
 
 .navbar i {
@@ -1672,7 +1672,7 @@ a:hover {
   border-radius: 5px;
   color: #073157 !important;
   transform: scale(1.05);
-  transition: cubic-bezier(0.075, 0.82, 0.165, 1);
+  transition: all ease-in-out;
 }
 
 .carousel-wrap {

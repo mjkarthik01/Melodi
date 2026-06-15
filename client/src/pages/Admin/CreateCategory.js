@@ -185,16 +185,13 @@ const CreateCategory = () => {
   ];
 
   return (
-    <div className="container-fluid py-3">
+    <div className="container-fluid">
       <Row gutter={[16, 16]}>
-        {/* Sidebar */}
-        <Col xs={24} sm={24} md={6} lg={5}>
+        <Col xs={24} md={6}>
           <AdminMenu />
         </Col>
 
-        {/* Content */}
-        <Col xs={24} sm={24} md={18} lg={19}>
-          {/* Create Category Card */}
+        <Col xs={24} md={18}>
           <Card title="📂 Manage Categories">
             <div className="mb-3">
               <label className="btn btn-outline-secondary w-100">

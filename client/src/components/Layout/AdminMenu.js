@@ -24,7 +24,7 @@ const AdminMenu = () => {
               `list-group-item list-group-item-action ${isActive ? "active" : ""}`
             }
           >
-            <i className="bi bi-box-seam" />
+            <i className="bi bi-box-seam-fill" />
             <span>Create Product</span>
           </NavLink>
           <NavLink
@@ -33,7 +33,7 @@ const AdminMenu = () => {
               `list-group-item list-group-item-action ${isActive ? "active" : ""}`
             }
           >
-            <i className="bi bi-collection" />
+            <i className="bi bi-collection-fill" />
             <span>Products</span>
           </NavLink>
           <NavLink
@@ -45,12 +45,15 @@ const AdminMenu = () => {
             <i className="bi bi-receipt" />
             <span>Orders</span>
           </NavLink>
-          {/* <NavLink
+          <NavLink
             to="/dashboard/admin/user"
-            className="list-group-item list-group-item-action"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
           >
-            Users
-          </NavLink> */}
+            <i className="bi bi-person-fill" />
+            <span>Users</span>
+          </NavLink>
         </div>
       </div>
     </>
