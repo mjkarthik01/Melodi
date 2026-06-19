@@ -130,7 +130,7 @@ const CreateCategory = () => {
       title: "Image",
       key: "image",
       width: 100,
-      responsive: ["sm"],
+      // responsive: ["md"],
       render: (_, record) => (
         <img
           src={`${process.env.REACT_APP_API}/api/v1/category/category-photo/${record._id}?v=${record.updatedAt}`}
