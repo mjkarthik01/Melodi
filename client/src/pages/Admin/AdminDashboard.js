@@ -62,9 +62,9 @@ const AdminDashboard = () => {
 
         <Col xs={24} md={18}>
           <Card title="Admin Dashboard">
-            <h3>Admin Name : {auth?.user?.name}</h3>
-            <h3>Admin Email : {auth?.user?.email}</h3>
-            <h3>Admin Contact : {auth?.user?.phone}</h3>
+            <h5 className="text-muted">Admin Name : {auth?.user?.name}</h5>
+            <h5 className="text-muted">Admin Email : {auth?.user?.email}</h5>
+            <h5 className="text-muted">Admin Contact : {auth?.user?.phone}</h5>
           </Card>
 
           <Row gutter={[16, 16]} style={{ marginTop: 20 }}>

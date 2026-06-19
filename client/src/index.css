@@ -872,7 +872,7 @@ a:hover {
 }
 
 .product-detail__visual {
-  border-radius: 2rem;
+  border-radius: 1.5rem;
   overflow: hidden;
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -882,6 +882,7 @@ a:hover {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
+  object-position: 0 90%;
 }
 
 .product-detail__info {
