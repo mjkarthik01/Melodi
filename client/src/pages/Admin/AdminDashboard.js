@@ -1,16 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Statistic } from "antd";
-import { Column } from "@ant-design/plots";
 import axios from "axios";
+import {
+  Card,
+  Col,
+  Row,
+  Statistic,
+  Button,
+  Switch,
+  message,
+  Upload,
+} from "antd";
+import { Column } from "@ant-design/plots";
 
 import AdminMenu from "../../components/Layout/AdminMenu";
 import { useAuth } from "../../context/auth";
+import { UploadOutlined } from "@ant-design/icons";
 
 const AdminDashboard = () => {
   const [auth] = useAuth();
 
+  // Sales
   const [salesData, setSalesData] = useState([]);
   const [totalSales, setTotalSales] = useState(0);
+
+  // Banner
+  const [bannerFile, setBannerFile] = useState(null);
+  const [title, setTitle] = useState("");
+  const [banners, setBanners] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [fileList, setFileList] = useState([]);
+
+  // ================= SALES =================
 
   const getMonthlySales = async () => {
     try {
@@ -30,11 +50,103 @@ const AdminDashboard = () => {
     }
   };
 
+  // ================= BANNERS =================
+
+  const getBanners = async () => {
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API}/api/v1/banner/banners`,
+      );
+
+      if (data?.success) {
+        setBanners(data.banners);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const uploadBanner = async () => {
+    try {
+      if (!bannerFile) {
+        message.error("Please select an image");
+        return;
+      }
+
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("image", bannerFile);
+
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API}/api/v1/banner/upload-banner`,
+        formData,
+      );
+
+      console.log("UPLOAD RESPONSE:", data);
+
+      if (!data?.success) {
+        message.error(data?.message || "Upload failed");
+        return;
+      }
+
+      message.success("Banner uploaded successfully");
+
+      setBannerFile(null);
+      setFileList([]);
+      setTitle("");
+
+      getBanners();
+    } catch (error) {
+      console.log("UPLOAD ERROR:", error);
+      message.error("Upload failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteBanner = async (id) => {
+    try {
+      const { data } = await axios.delete(
+        `${process.env.REACT_APP_API}/api/v1/banner/delete-banner/${id}`,
+      );
+
+      if (data?.success) {
+        message.success("Banner deleted");
+        getBanners();
+      }
+    } catch (error) {
+      console.log(error);
+      message.error("Delete failed");
+    }
+  };
+
+  const toggleBanner = async (id) => {
+    try {
+      const { data } = await axios.put(
+        `${process.env.REACT_APP_API}/api/v1/banner/toggle-banner/${id}`,
+      );
+
+      if (data?.success) {
+        getBanners();
+      }
+    } catch (error) {
+      console.log(error);
+      message.error("Update failed");
+    }
+  };
+
+  // ================= EFFECT =================
+
   useEffect(() => {
     if (auth?.token) {
       getMonthlySales();
+      getBanners();
     }
   }, [auth?.token]);
+
+  // ================= CHART =================
 
   const config = {
     data: salesData,
@@ -42,14 +154,6 @@ const AdminDashboard = () => {
     yField: "sales",
     label: {
       position: "top",
-    },
-    tooltip: {
-      items: [
-        (datum) => ({
-          name: "Sales",
-          value: `₹${datum.sales}`,
-        }),
-      ],
     },
   };
 
@@ -61,12 +165,111 @@ const AdminDashboard = () => {
         </Col>
 
         <Col xs={24} md={18}>
+          {/* Admin Info */}
           <Card title="Admin Dashboard">
             <h5 className="text-muted">Admin Name : {auth?.user?.name}</h5>
+
             <h5 className="text-muted">Admin Email : {auth?.user?.email}</h5>
+
             <h5 className="text-muted">Admin Contact : {auth?.user?.phone}</h5>
           </Card>
 
+          {/* Banner Management */}
+          <Card title="Banner Management" style={{ marginTop: 20 }}>
+            <div className="mb-3">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Banner Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            <Upload
+              accept="image/*"
+              fileList={fileList}
+              beforeUpload={(file) => {
+                setBannerFile(file);
+                setFileList([file]); // show in UI
+                return false;
+              }}
+              onRemove={() => {
+                setBannerFile(null);
+                setFileList([]);
+              }}
+            >
+              <Button icon={<UploadOutlined />}>Select Banner Image</Button>
+            </Upload>
+
+            {bannerFile && (
+              <div className="mt-3">
+                <img
+                  src={URL.createObjectURL(bannerFile)}
+                  alt="preview"
+                  style={{
+                    width: "300px",
+                    maxWidth: "100%",
+                    borderRadius: "10px",
+                  }}
+                />
+              </div>
+            )}
+
+            <Button
+              type="primary"
+              loading={loading}
+              className="mt-3"
+              onClick={uploadBanner}
+            >
+              Upload Banner
+            </Button>
+
+            <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
+              {banners.map((banner) => (
+                <Col xs={24} sm={12} lg={8} key={banner._id}>
+                  {console.log(banner.image)}
+
+                  <Card hoverable>
+                    <img
+                      src={`${process.env.REACT_APP_API}${banner.image}`}
+                      alt={banner.title}
+                      style={{
+                        width: "100%",
+                        height: "180px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                      }}
+                    />
+
+                    <h6
+                      style={{
+                        marginTop: 10,
+                        minHeight: 40,
+                      }}
+                    >
+                      {banner.title || "Untitled Banner"}
+                    </h6>
+
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Switch
+                        checkedChildren="Hide"
+                        unCheckedChildren="Show"
+                        checked={banner.isActive}
+                        onChange={() => toggleBanner(banner._id)}
+                      />
+
+                      <Button danger onClick={() => deleteBanner(banner._id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+
+          {/* Sales */}
           <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
             <Col xs={24} md={12}>
               <Card>

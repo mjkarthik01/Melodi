@@ -100,6 +100,12 @@ const ProductCard = ({
             <div className="product-card__meta">
               <span className="product-card__price">
                 &#8377; {product?.price}
+                <span className="text-decoration-line-through text-muted mx-2 fs-6">
+                  &#8377;{" "}
+                  {Math.round(
+                    product?.price + (product?.price * product.discount) / 100,
+                  )}
+                </span>
               </span>
               <span className="product-card__rating">4.8 ★</span>
             </div>

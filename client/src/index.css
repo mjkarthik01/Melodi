@@ -1329,6 +1329,7 @@ a:hover {
 
 .product-card__price {
   color: rgb(249, 53, 53);
+  font-size: 23px;
 }
 
 .product-card__media {

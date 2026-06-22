@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Carousel } from "antd";
 
 const getPadding = (width) => {
@@ -11,33 +12,68 @@ const getPadding = (width) => {
 const AdSlider = () => {
   const [centerPadding, setCenterPadding] = useState("120px");
 
+  const [uploadedBanners, setUploadedBanners] = useState([]);
+
+  const defaultImages = [
+    "/SwiperSlide1.png",
+    "/SwiperSlide2.png",
+    "/SwiperSlide3.png",
+    "/SwiperSlide4.png",
+  ];
+
+  const getBanners = async () => {
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API}/api/v1/banner/banners`,
+      );
+
+      if (data?.success) {
+        const activeBanners = data.banners
+          .filter((banner) => banner.isActive)
+          .map((banner) => `${process.env.REACT_APP_API}${banner.image}`);
+
+        setUploadedBanners(activeBanners);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
+    getBanners();
+
     const handleResize = () => {
       setCenterPadding(getPadding(window.innerWidth));
     };
 
-    handleResize(); // set initial value
+    handleResize();
+
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const allImages = [
+    ...uploadedBanners,
+    ...defaultImages.slice(uploadedBanners.length),
+  ];
 
   return (
     <div className="carousel-wrap">
       <Carousel
         arrows
         autoplay
-        autoplaySpeed={2500}
+        autoplaySpeed={3000}
         infinite
         dots
         centerMode
         centerPadding={centerPadding}
         className="custom-carousel"
       >
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i}>
+        {allImages.map((image, index) => (
+          <div key={index}>
             <div className="slide">
-              <img src={`./SwiperSlide${i}.png`} alt={`Banner${i}`} />
+              <img src={image} alt={`Banner-${index}`} />
             </div>
           </div>
         ))}
