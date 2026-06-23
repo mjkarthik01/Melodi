@@ -10,7 +10,6 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
   const limit = 12;
 
@@ -23,7 +22,6 @@ const Products = () => {
       );
 
       setProducts(data?.products || []);
-      setTotal(data?.total || 0);
       setPages(data?.pages || 0);
       setPage(currentPage);
     } catch (error) {

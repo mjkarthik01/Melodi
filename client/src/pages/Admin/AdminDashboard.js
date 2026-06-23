@@ -228,8 +228,6 @@ const AdminDashboard = () => {
             <Row gutter={[16, 16]} style={{ marginTop: 20 }}>
               {banners.map((banner) => (
                 <Col xs={24} sm={12} lg={8} key={banner._id}>
-                  {console.log(banner.image)}
-
                   <Card hoverable>
                     <img
                       src={`${process.env.REACT_APP_API}${banner.image}`}

@@ -6,10 +6,10 @@ import { Toaster } from "react-hot-toast";
 
 const Layout = ({
   children,
-  title = "Melodi - Shop Now",
+  title = "Sweetie Ayman - Shop Now",
   description = "Premium bag marketplace",
   keywords = "bag, handbag, wallet, accessories",
-  author = "Melodi",
+  author = "Sweetie Ayman",
 }) => {
   return (
     <div className="app-shell">

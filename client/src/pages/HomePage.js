@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { Checkbox, Radio } from "antd";
-import { Prices } from "../components/Prices";
+import AdSlider from "../components/AdSlider";
+import EmptyState from "../components/UI/EmptyState";
+import ProductCard from "../components/UI/ProductCard";
+import SectionHeader from "../components/UI/SectionHeader";
 import { useCart } from "../context/cart";
 import { useWishlist } from "../context/wishlist";
-import toast from "react-hot-toast";
-import SectionHeader from "../components/UI/SectionHeader";
-import ProductCard from "../components/UI/ProductCard";
-import EmptyState from "../components/UI/EmptyState";
-import AdSlider from "../components/AdSlider";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
