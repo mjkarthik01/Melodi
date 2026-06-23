@@ -14,7 +14,7 @@ const Policy = () => {
           24/7 to assist you
         </p>
         <p className="mt-3">
-          <BiMailSend /> : www.help@melodi.com
+          <BiMailSend /> : www.help@sweetieayman.com
         </p>
         <p className="mt-3">
           <BiPhoneCall /> : 012-3456789

@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="site-footer__grid container">
         <div className="site-footer__section">
           <Link to="/" className="site-footer__brand">
-            Melodi
+            Sweetie Ayman
           </Link>
           <p>
             Modern bags, curated for everyday luxury. Fast delivery and easy
@@ -44,7 +44,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="site-footer__bottom container">
-        <p>© 2026 Melodi. Crafted for premium ecommerce.</p>
+        <p>© 2026 Sweetie Ayman. Crafted for premium ecommerce.</p>
       </div>
     </footer>
   );

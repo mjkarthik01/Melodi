@@ -253,10 +253,9 @@ const AdminDashboard = () => {
 
                     <div className="d-flex justify-content-between align-items-center">
                       <Switch
-                        checkedChildren="Hide"
-                        unCheckedChildren="Show"
                         checked={banner.isActive}
                         onChange={() => toggleBanner(banner._id)}
+                        className="mx-2"
                       />
 
                       <Button danger onClick={() => deleteBanner(banner._id)}>
