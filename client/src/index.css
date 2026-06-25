@@ -317,6 +317,7 @@ a:hover {
   max-width: 560px;
   border-radius: 2rem;
   box-shadow: var(--shadow);
+  object-fit: cover;
 }
 
 .section-header {

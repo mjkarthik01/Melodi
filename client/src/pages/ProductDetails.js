@@ -60,11 +60,6 @@ const ProductDetails = () => {
 
   const addToCart = () => {
     if (!product) return;
-    const item = {
-      ...product,
-      quantity,
-      selectedColor: selectedColor || product.colors?.[0],
-    };
     const existing = cart.find(
       (cartItem) =>
         cartItem._id === product._id &&

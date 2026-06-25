@@ -15,6 +15,12 @@ const CartPage = () => {
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [discount, setDiscount] = useState(0);
+
+  const [couponCode, setCouponCode] = useState(
+    localStorage.getItem("coupon") || "",
+  );
+
   const navigate = useNavigate();
 
   const getSubtotal = () => {
@@ -43,6 +49,8 @@ const CartPage = () => {
       currency: "INR",
     });
   };
+
+  const finalTotal = Math.max(getGrandTotal() - discount, 0);
 
   const removeCartItem = (pid, color) => {
     const updatedCart = cart.filter(
@@ -78,6 +86,25 @@ const CartPage = () => {
     getToken();
   }, [auth?.token]);
 
+  useEffect(() => {
+    const code = localStorage.getItem("coupon");
+
+    if (code) {
+      setCouponCode(code);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (couponCode && cart.length > 0) {
+      validateCoupon(couponCode);
+    }
+  }, [couponCode, cart]);
+
+  useEffect(() => {
+    console.log("Coupon Code:", couponCode);
+    console.log("Discount:", discount);
+  }, [couponCode, discount]);
+
   const handlePayment = async () => {
     try {
       setLoading(true);
@@ -87,6 +114,7 @@ const CartPage = () => {
         {
           nonce,
           cart,
+          couponCode,
         },
       );
       setLoading(false);
@@ -96,6 +124,42 @@ const CartPage = () => {
       toast.success("Payment Completed successfully");
     } catch (error) {
       setLoading(false);
+    }
+  };
+
+  const validateCoupon = async (code) => {
+    try {
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API}/api/v1/coupon/validate`,
+        { code },
+        {
+          headers: {
+            Authorization: auth?.token,
+          },
+        },
+      );
+
+      if (data.success) {
+        const subtotal = cart.reduce(
+          (sum, item) => sum + Number(item.price) * (item.quantity || 1),
+          0,
+        );
+
+        const shipping = cart.reduce((sum, item) => {
+          if (item.shipping) {
+            return sum + Number(item.shippingCost || 0);
+          }
+          return sum;
+        }, 0);
+
+        const total = subtotal + shipping;
+
+        const discountAmount = total * (data.coupon.percentage / 100);
+
+        setDiscount(discountAmount);
+      }
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -264,6 +328,16 @@ const CartPage = () => {
               </h5>
 
               <hr />
+
+              <h5>
+                Discount:
+                {formatCurrency(discount)}
+              </h5>
+
+              <h3>
+                Pay:
+                {formatCurrency(finalTotal)}
+              </h3>
 
               <h4 className="text-danger">
                 Total :

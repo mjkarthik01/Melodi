@@ -54,6 +54,24 @@ const AdminMenu = () => {
             <i className="bi bi-person-fill" />
             <span>Users</span>
           </NavLink>
+          <NavLink
+            to="/dashboard/admin/accounts"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="bi bi-bank" />
+            <span>Account</span>
+          </NavLink>
+          <NavLink
+            to="/dashboard/admin/coupon"
+            className={({ isActive }) =>
+              `list-group-item list-group-item-action ${isActive ? "active" : ""}`
+            }
+          >
+            <i className="bi bi-ticket-perforated-fill" />
+            <span>Coupons</span>
+          </NavLink>
         </div>
       </div>
     </>

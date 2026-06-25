@@ -6,6 +6,9 @@ import CategoryModel from "../models/CategoryModel.js";
 import braintree from "braintree";
 import OrderModel from "../models/OrderModel.js";
 import gateway from "../config/braintree.js";
+import getGateway from "../utils/getGateway.js";
+import CouponModel from "../models/CouponModel.js";
+import UserModel from "../models/UserModel.js";
 
 export const createProductController = async (req, res) => {
   try {
@@ -264,7 +267,7 @@ export const productCountController = async (req, res) => {
 
 export const productListController = async (req, res) => {
   try {
-    const perPage = 3;
+    const perPage = 12;
     const page = Number(req.params.page) || 1;
     const products = await ProductModel.find({})
       .select("-photo")
@@ -389,32 +392,65 @@ export const productCategoryController = async (req, res) => {
 
 export const braintreeTokenController = async (req, res) => {
   try {
+    const gateway = await getGateway();
+
     gateway.clientToken.generate({}, function (err, response) {
       if (err) {
-        res.status(500).send(err);
-      } else {
-        res.send(response);
+        return res.status(500).send(err);
       }
+
+      res.send(response);
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({
+      success: false,
+      error,
+    });
+  }
 };
+
 export const braintreePaymentController = async (req, res) => {
   try {
-    const { cart, nonce } = req.body;
+    const { cart, nonce, couponCode } = req.body;
     let total = 0;
 
     cart.forEach((item) => {
-      const qty = item.discount || 1;
+      const qty = item.quantity || 1;
 
-      // Product total
       total += Number(item.price) * qty;
 
-      // Shipping total
       if (item.shipping) {
         total += Number(item.shippingCost || 0) * qty;
       }
     });
-    let newTransaction = gateway.transaction.sale(
+
+    if (couponCode) {
+      const coupon = await CouponModel.findOne({
+        code: couponCode,
+        active: true,
+      });
+
+      if (coupon) {
+        const user = await UserModel.findById(req.user._id);
+
+        if (!user.usedCoupons.includes(couponCode)) {
+          total = total - total * (coupon.percentage / 100);
+
+          user.usedCoupons.push(couponCode);
+
+          await user.save();
+
+          coupon.usedBy.push(req.user._id);
+
+          await coupon.save();
+        }
+      }
+    }
+    const gateway = await getGateway();
+
+    gateway.transaction.sale(
       {
         amount: total,
         paymentMethodNonce: nonce,
@@ -429,6 +465,7 @@ export const braintreePaymentController = async (req, res) => {
             payment: result,
             buyer: req.user._id,
           }).save();
+
           res.json({ ok: true });
         } else {
           res.status(500).send(error);

@@ -11,9 +11,9 @@ import { useWishlist } from "../context/wishlist";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [checked, setChecked] = useState([]);
-  const [radio, setRadio] = useState("");
+  const [setCategories] = useState([]);
+  const [checked] = useState([]);
+  const [radio] = useState("");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const { cart, setCart } = useCart();
@@ -60,12 +60,6 @@ const HomePage = () => {
     } catch (error) {
       console.error(error);
     }
-  };
-
-  const handleFilter = (value, id) => {
-    setChecked((current) =>
-      value ? [...current, id] : current.filter((item) => item !== id),
-    );
   };
 
   const filterProduct = async () => {
@@ -124,7 +118,7 @@ const HomePage = () => {
   useEffect(() => {
     getTotal();
     getAllCategory();
-  }, []);
+  });
 
   useEffect(() => {
     if (!checked.length && !radio) {
@@ -216,14 +210,10 @@ const HomePage = () => {
                 />
               ))}
         </div>
-        {products.length > featuredProducts.length && (
-          <div className="section-footer">
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={() => navigate("/categories")}
-            >
-              See all products
+        {products.length < total && (
+          <div className="text-center mt-4">
+            <button className="btn btn-light" onClick={() => setPage(page + 1)}>
+              Load More
             </button>
           </div>
         )}

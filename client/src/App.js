@@ -27,6 +27,9 @@ import Orders from "./pages/user/Orders";
 import Profile from "./pages/user/Profile";
 import Wishlist from "./pages/Wishlist";
 import Layout from "./components/Layout/Layout";
+import AdminAccount from "./pages/Admin/AdminAccount";
+import CreateCoupon from "./pages/Admin/CreateCoupon";
+import CouponRedirect from "./pages/CouponRedirect";
 function App() {
   const location = useLocation();
   return (
@@ -34,6 +37,7 @@ function App() {
       <Layout>
         <AnimatedRoutes>
           <Routes location={location} key={location.pathname}>
+            <Route path="/coupon/:code" element={<CouponRedirect />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:slug" element={<ProductDetails />} />
             <Route path="/categories" element={<Categories />} />
@@ -57,6 +61,8 @@ function App() {
               <Route path="admin/products" element={<Products />} />
               <Route path="admin/user" element={<User />} />
               <Route path="admin/orders" element={<AdminOrders />} />
+              <Route path="admin/accounts" element={<AdminAccount />} />
+              <Route path="admin/coupon" element={<CreateCoupon />} />
             </Route>
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />

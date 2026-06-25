@@ -2,12 +2,17 @@ import React, { useEffect, useState } from "react";
 import AdminMenu from "../../components/Layout/AdminMenu";
 import { Card, Col, Row, Table } from "antd";
 import axios from "axios";
+import Loader from "../../components/UI/Loader";
+import toast from "react-hot-toast";
 
 const User = () => {
   const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const getAllUsers = async () => {
     try {
+      setLoading(true);
+
       const { data } = await axios.get(
         `${process.env.REACT_APP_API}/api/v1/auth/all-users`,
       );
@@ -16,7 +21,9 @@ const User = () => {
         setUsers(data.users);
       }
     } catch (error) {
-      console.log(error);
+      toast.error("Can't get Users List");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,12 +53,16 @@ const User = () => {
 
         <Col xs={24} md={18}>
           <Card title="👤 All Users">
-            <Table
-              columns={columns}
-              dataSource={users}
-              rowKey="_id"
-              pagination={{ pageSize: 10 }}
-            />
+            {loading ? (
+              <Loader />
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={users}
+                rowKey="_id"
+                pagination={{ pageSize: 10 }}
+              />
+            )}
           </Card>
         </Col>
       </Row>

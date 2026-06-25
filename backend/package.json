@@ -7,7 +7,7 @@
     "start": "node server.js",
     "server": "nodemon server.js",
     "client": "npm start --prefix ./client",
-    "dev": "npm start" 
+    "dev": "npm start"
   },
   "keywords": [],
   "author": "Karthik",
@@ -27,6 +27,7 @@
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
     "morgan": "^1.10.1",
+    "nanoid": "^5.1.15",
     "nodemon": "^3.1.14",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

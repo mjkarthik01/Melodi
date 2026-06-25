@@ -10,6 +10,8 @@ import authRoutes from "./routes/authRoute.js";
 import categoryRoute from "./routes/categoryRoute.js";
 import productRoute from "./routes/productRoute.js";
 import bannerRoute from "./routes/bannerRoute.js";
+import paymentConfigRoutes from "./routes/paymentConfigRoutes.js";
+import couponRoute from "./routes/couponRoute.js";
 import cors from "cors";
 import path from "path";
 
@@ -30,6 +32,10 @@ app.use("/api/v1/category", categoryRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/banner", bannerRoute);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+app.use("/api/v1/admin", paymentConfigRoutes);
+
+app.use("/api/v1/coupon", couponRoute);
 
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to ecommerce app<h1>");
