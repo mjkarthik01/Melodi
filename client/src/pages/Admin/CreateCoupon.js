@@ -13,17 +13,24 @@ import {
   message,
   Tag,
   QRCode,
+  Grid,
 } from "antd";
 
 import AdminMenu from "../../components/Layout/AdminMenu";
 
+const { useBreakpoint } = Grid;
+
 const CreateCoupon = () => {
+  const screens = useBreakpoint();
+
+  const isMobile = screens.xs && !screens.sm;
+  const isTablet = screens.sm && !screens.lg;
   const [form] = Form.useForm();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-  const [sharing, setSharing] = useState(false);
+  const [sharingId, setSharingId] = useState(null);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
 
   const posterRef = useRef(null);
@@ -84,9 +91,9 @@ const CreateCoupon = () => {
 
   // ---------------- SHARE POSTER ----------------
   const shareCoupon = async (record) => {
-    if (sharing) return;
+    if (sharingId) return;
 
-    setSharing(true);
+    setSharingId(record._id);
 
     try {
       setSelectedCoupon(record);
@@ -108,7 +115,9 @@ const CreateCoupon = () => {
         type: "image/png",
       });
 
-      const text = `🎉 Get ${record.percentage}% OFF!\nUse this coupon:\n${window.location.origin}/coupon/${record.code}`;
+      const text = `🎉 Get ${record.percentage}% OFF!
+Use this coupon:
+${window.location.origin}/coupon/${record.code}`;
 
       if (navigator.share) {
         await navigator.share({
@@ -118,13 +127,12 @@ const CreateCoupon = () => {
         });
       }
     } catch (err) {
-      // User cancelling share is not really an error
       if (err.name !== "AbortError") {
         console.error(err);
         message.error("Share failed");
       }
     } finally {
-      setSharing(false);
+      setSharingId(null);
     }
   };
 
@@ -171,8 +179,8 @@ const CreateCoupon = () => {
       render: (_, record) => (
         <Button
           type="primary"
-          loading={sharing}
-          disabled={isExpired(record.expiryDate) || sharing}
+          loading={sharingId === record._id}
+          disabled={isExpired(record.expiryDate) || sharingId === record._id}
           onClick={() => shareCoupon(record)}
         >
           Share Coupon
@@ -202,12 +210,13 @@ const CreateCoupon = () => {
 
         <Col xs={24} md={18}>
           {/* ---------------- CREATE FORM ---------------- */}
-          <Card title="Create Coupon">
+          <Card title="🏷️ Create Coupon">
             <Form
               form={form}
               layout="vertical"
               onFinish={createCoupon}
               initialValues={{ percentage: 10 }}
+              className="d-lg-flex justify-content-lg-evenly align-items-center"
             >
               <Form.Item
                 label="Discount Percentage"
@@ -255,14 +264,80 @@ const CreateCoupon = () => {
           </Card>
 
           {/* ---------------- TABLE ---------------- */}
-          <Card style={{ marginTop: 16 }}>
-            <Table
-              rowKey="_id"
-              dataSource={coupons}
-              columns={columns}
-              loading={loading}
-            />
-          </Card>
+
+          {isMobile || isTablet ? (
+            <Row gutter={[16, 16]}>
+              {coupons.map((record) => {
+                const expired = isExpired(record.expiryDate);
+
+                return (
+                  <Col xs={24} sm={12} md={12} lg={24} key={record._id}>
+                    <Card
+                      size="small"
+                      title={
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span>{record.code}</span>
+
+                          <Tag color={expired ? "red" : "green"}>
+                            {expired ? "Expired" : `${record.percentage}% OFF`}
+                          </Tag>
+                        </div>
+                      }
+                    >
+                      <div className="text-center mb-3">
+                        <QRCode
+                          value={`${window.location.origin}/coupon/${record.code}`}
+                          size={120}
+                          status={expired ? "expired" : "active"}
+                        />
+                      </div>
+
+                      <p>
+                        <strong>Discount:</strong> {record.percentage}%
+                      </p>
+
+                      <p>
+                        <strong>Expiry:</strong>{" "}
+                        {record.expiryDate
+                          ? new Date(record.expiryDate).toDateString()
+                          : "-"}
+                      </p>
+
+                      <div className="d-flex gap-2">
+                        <Button
+                          type="primary"
+                          block
+                          loading={sharingId === record._id}
+                          disabled={expired || sharingId === record._id}
+                          onClick={() => shareCoupon(record)}
+                        >
+                          Share
+                        </Button>
+
+                        <Button
+                          danger
+                          block
+                          loading={deletingId === record._id}
+                          onClick={() => deleteCoupon(record._id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+          ) : (
+            <Card style={{ marginTop: 16 }}>
+              <Table
+                rowKey="_id"
+                dataSource={coupons}
+                columns={columns}
+                loading={loading}
+              />
+            </Card>
+          )}
         </Col>
       </Row>
 
@@ -336,7 +411,7 @@ const CreateCoupon = () => {
               🎉 {selectedCoupon.percentage}% Discount
             </h1>
 
-            <p style={{ margin: 0, fontSize: "14px", color: "#555" }}>
+            <p style={{ margin: "10px 0px", fontSize: "14px", color: "#555" }}>
               Exclusive Limited Time Offer
             </p>
 

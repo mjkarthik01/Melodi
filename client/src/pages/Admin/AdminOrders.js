@@ -27,7 +27,9 @@ const { Text } = Typography;
 
 const AdminOrders = () => {
   const screens = useBreakpoint();
-  const isMobile = !screens.md;
+
+  const isMobile = screens.xs && !screens.sm;
+  const isTablet = screens.sm && !screens.lg;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [auth] = useAuth();
@@ -187,7 +189,7 @@ const AdminOrders = () => {
               <Loader />
             ) : (
               <>
-                {isMobile ? (
+                {isMobile || isTablet ? (
                   <Space
                     orientation="vertical"
                     size="middle"

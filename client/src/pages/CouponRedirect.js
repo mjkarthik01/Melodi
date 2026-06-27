@@ -8,11 +8,9 @@ const CouponRedirect = () => {
   useEffect(() => {
     if (code) {
       localStorage.setItem("coupon", code);
-
-      // force reload cart so discount recalculates properly
-      navigate("/cart");
+      navigate("/cart", { replace: true });
     }
-  }, [code]);
+  }, [code, navigate]);
 
   return <h3>Applying coupon...</h3>;
 };

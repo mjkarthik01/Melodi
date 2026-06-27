@@ -129,8 +129,7 @@ const CreateCategory = () => {
     {
       title: "Image",
       key: "image",
-      width: 100,
-      // responsive: ["md"],
+      width: 50,
       render: (_, record) => (
         <img
           src={`${process.env.REACT_APP_API}/api/v1/category/category-photo/${record._id}?v=${record.updatedAt}`}
@@ -148,11 +147,12 @@ const CreateCategory = () => {
       title: "Category Name",
       dataIndex: "name",
       key: "name",
+      width: 100,
     },
     {
       title: "Actions",
       key: "actions",
-      width: 220,
+      width: 120,
       render: (_, record) => (
         <Space wrap>
           <Button

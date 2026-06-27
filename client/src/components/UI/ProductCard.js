@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "antd";
+import React, { useEffect, useState, useRef } from "react";
 
 const ProductCard = ({
   product,
@@ -10,7 +10,7 @@ const ProductCard = ({
   loading = false,
 }) => {
   const navigate = useNavigate();
-
+  const colorSliderRef = useRef(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgVisible, setImgVisible] = useState(false);
   const [selectedColor, setSelectedColor] = useState("");
@@ -22,6 +22,42 @@ const ProductCard = ({
       setSelectedColor(product.colors[0]);
     }
   }, [product]);
+
+  const smoothScrollBy = (element, distance, duration = 3000) => {
+    const start = element.scrollLeft;
+    const startTime = performance.now();
+
+    const easeInOutQuad = (t) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const eased = easeInOutQuad(progress);
+
+      element.scrollLeft = start + distance * eased;
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+
+  const scrollColors = (direction) => {
+    const container = colorSliderRef.current;
+    if (!container) return;
+
+    const scrollAmount = 120;
+
+    smoothScrollBy(
+      container,
+      direction === "next" ? scrollAmount : -scrollAmount,
+      300, // duration (increase = slower, smoother)
+    );
+  };
 
   return (
     <article className="product-card">
@@ -113,29 +149,63 @@ const ProductCard = ({
             <div className="mb-3">
               <strong className="text-muted">Select Color</strong>
 
-              <div className="d-flex gap-2 mt-2">
-                {product?.colors?.map((color) => (
-                  <button
-                    type="button"
-                    aria-label={`Select ${color}`}
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    style={{
-                      width: 35,
-                      height: 35,
-                      borderRadius: "50%",
-                      background: color,
-                      cursor: "pointer",
-                      boxShadow:
-                        selectedColor === color
-                          ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
-                          : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
-                      border:
-                        selectedColor === color ? `0.5px solid gray` : "none",
-                      opacity: selectedColor === color ? 1 : 0.8,
-                    }}
-                  />
-                ))}
+              <div className="d-flex align-items-center mt-2">
+                {/* Prev button */}
+                <button
+                  type="button"
+                  className="btn btn-light btn--small"
+                  onClick={() => scrollColors("prev")}
+                >
+                  ‹
+                </button>
+
+                {/* Scroll container */}
+                <div
+                  ref={colorSliderRef}
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    overflowX: "auto",
+                    scrollBehavior: "smooth",
+                    padding: "5px",
+                    maxWidth: "225px",
+                    scrollbarWidth: "none",
+                  }}
+                  className="color-scroll"
+                >
+                  {product?.colors?.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      aria-label={`Select ${color}`}
+                      onClick={() => setSelectedColor(color)}
+                      style={{
+                        minWidth: 35,
+                        height: 35,
+                        borderRadius: "50%",
+                        background: color,
+                        cursor: "pointer",
+                        flex: "0 0 auto",
+                        boxShadow:
+                          selectedColor === color
+                            ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
+                            : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
+                        border:
+                          selectedColor === color ? "0.5px solid gray" : "none",
+                        opacity: selectedColor === color ? 1 : 0.8,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Next button */}
+                <button
+                  type="button"
+                  className="btn btn-light btn--small"
+                  onClick={() => scrollColors("next")}
+                >
+                  ›
+                </button>
               </div>
             </div>
 

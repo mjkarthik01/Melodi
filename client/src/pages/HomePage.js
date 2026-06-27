@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import AdSlider from "../components/AdSlider";
@@ -8,10 +8,12 @@ import ProductCard from "../components/UI/ProductCard";
 import SectionHeader from "../components/UI/SectionHeader";
 import { useCart } from "../context/cart";
 import { useWishlist } from "../context/wishlist";
+import { useRef } from "react";
+import { motion } from "framer-motion";
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
-  const [setCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [checked] = useState([]);
   const [radio] = useState("");
   const [total, setTotal] = useState(0);
@@ -20,6 +22,13 @@ const HomePage = () => {
   const [wishlist, setWishlist] = useWishlist();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const scrollPosition = useRef(0);
+
+  const handleLoadMore = () => {
+    scrollPosition.current = window.scrollY;
+    setPage((prev) => prev + 1);
+  };
 
   const getAllCategory = async () => {
     try {
@@ -67,7 +76,7 @@ const HomePage = () => {
       setLoading(true);
       const { data } = await axios.post(
         `${process.env.REACT_APP_API}/api/v1/product/product-filters`,
-        { checked, radio, page: 1, limit: 12 },
+        { checked, radio, page: 1, limit: 6 },
       );
       setProducts(data?.products || []);
       setTotal(data?.total || 0);
@@ -118,7 +127,7 @@ const HomePage = () => {
   useEffect(() => {
     getTotal();
     getAllCategory();
-  });
+  }, []);
 
   useEffect(() => {
     if (!checked.length && !radio) {
@@ -136,7 +145,17 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked, radio]);
 
-  const featuredProducts = useMemo(() => products.slice(0, 8), [products]);
+  useEffect(() => {
+    if (page > 1) {
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: scrollPosition.current,
+          behavior: "instant", // or "auto"
+        });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products]);
 
   return (
     <>
@@ -199,20 +218,26 @@ const HomePage = () => {
             ? Array.from({ length: 8 }).map((_, i) => (
                 <ProductCard key={i} loading={true} />
               ))
-            : featuredProducts.map((product) => (
-                <ProductCard
-                  key={product._id}
-                  product={product}
-                  onAddToCart={addToCart}
-                  onWishlist={toggleWishlist}
-                  isWishlisted={isWishlisted(product)}
-                  loading={false}
-                />
+            : products.map((product) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    onAddToCart={addToCart}
+                    onWishlist={toggleWishlist}
+                    isWishlisted={isWishlisted(product)}
+                    loading={false}
+                  />
+                </motion.div>
               ))}
         </div>
         {products.length < total && (
           <div className="text-center mt-4">
-            <button className="btn btn-light" onClick={() => setPage(page + 1)}>
+            <button className="btn btn-light" onClick={handleLoadMore}>
               Load More
             </button>
           </div>

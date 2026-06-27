@@ -56,7 +56,7 @@ const Header = () => {
       <div className="container-fluid">
         <Link className="navbar-brand site-header__brand" to="/">
           <img src="/ShopLogo4.png" alt="Melodi Logo" className="brand-logo" />
-          <span className="brand-text me-5">Sweetie Ayman</span>
+          <span className="brand-text">Sweetie Ayman</span>
         </Link>
 
         <button

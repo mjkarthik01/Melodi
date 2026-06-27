@@ -137,11 +137,14 @@ a:hover {
   box-shadow: none;
 }
 
-/* Button Sizes */
 .btn--small {
-  padding: 0.6rem 1.2rem;
-  font-size: 0.85rem;
-  border-radius: 0.6rem;
+  padding: 0.4rem 0.2rem;
+  font-size: 1rem;
+  color: #535763 !important;
+}
+
+.btn--small:hover {
+  border-color: gray !important;
 }
 
 .btn--large {
@@ -236,6 +239,10 @@ a:hover {
 
 .btn-icon i {
   font-size: 1.1rem;
+}
+
+.color-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* List Group Styling */
@@ -378,8 +385,8 @@ a:hover {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.6rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.2rem;
 }
 
 .product-card {
@@ -483,7 +490,7 @@ a:hover {
 
 .product-card__excerpt {
   color: var(--muted);
-  min-height: 3rem;
+  min-height: 2rem;
 }
 
 .product-card__meta {
@@ -751,7 +758,6 @@ a:hover {
 .brand-logo {
   object-fit: contain;
   height: 3rem;
-  /* scale: calc(3); */
 }
 
 .brand-text {
@@ -1357,11 +1363,6 @@ a:hover {
   gap: 0.75rem;
   padding: 1rem 1.25rem;
   flex: 1 1 auto;
-}
-
-.product-card__excerpt {
-  color: var(--muted);
-  min-height: 3.6rem;
 }
 
 .product-card__actions {

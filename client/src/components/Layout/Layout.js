@@ -23,7 +23,7 @@ const Layout = ({
       </Helmet>
       <Header />
       <main className="app-main">
-        <Toaster position="top-right" />
+        <Toaster position="top-center" />
         {children}
       </main>
       <Footer />

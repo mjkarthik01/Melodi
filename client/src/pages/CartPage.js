@@ -16,8 +16,13 @@ const CartPage = () => {
   const [instance, setInstance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const [couponCode, setCouponCode] = useState(
+    localStorage.getItem("coupon") || "",
+  );
+
+  const [couponInput, setCouponInput] = useState(
     localStorage.getItem("coupon") || "",
   );
 
@@ -73,6 +78,73 @@ const CartPage = () => {
     localStorage.setItem("cart", JSON.stringify(updated));
   };
 
+  const validateCoupon = async (code) => {
+    try {
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API}/api/v1/coupon/validate`,
+        { code },
+        {
+          headers: {
+            Authorization: auth?.token,
+          },
+        },
+      );
+
+      if (!data.success) {
+        toast.error("Invalid coupon");
+        return;
+      }
+
+      const subtotal = cart.reduce(
+        (sum, item) => sum + Number(item.price) * (item.quantity || 1),
+        0,
+      );
+
+      const shipping = cart.reduce((sum, item) => {
+        if (item.shipping) {
+          return sum + Number(item.shippingCost || 0);
+        }
+        return sum;
+      }, 0);
+
+      const total = subtotal + shipping;
+
+      const discountAmount = total * (data.coupon.percentage / 100);
+
+      setDiscount(discountAmount);
+
+      setCouponCode(code);
+      localStorage.setItem("coupon", code);
+
+      setAppliedCoupon(code);
+
+      toast.success("Coupon applied successfully!");
+    } catch (error) {
+      toast.error("Coupon validation failed");
+    }
+  };
+
+  const applyCoupon = async () => {
+    if (!couponInput.trim()) {
+      toast.error("Enter coupon code");
+      return;
+    }
+
+    await validateCoupon(couponInput.trim().toUpperCase());
+  };
+
+  const removeCoupon = () => {
+    localStorage.removeItem("coupon");
+
+    setCouponCode("");
+
+    setCouponInput("");
+
+    setDiscount(0);
+
+    toast.success("Coupon removed");
+  };
+
   const getToken = async () => {
     try {
       const { data } = await axios.get(
@@ -91,11 +163,12 @@ const CartPage = () => {
 
     if (code) {
       setCouponCode(code);
+      setCouponInput(code);
     }
   }, []);
 
   useEffect(() => {
-    if (couponCode && cart.length > 0) {
+    if (couponCode && cart.length > 0 && appliedCoupon !== couponCode) {
       validateCoupon(couponCode);
     }
   }, [couponCode, cart]);
@@ -104,6 +177,10 @@ const CartPage = () => {
     console.log("Coupon Code:", couponCode);
     console.log("Discount:", discount);
   }, [couponCode, discount]);
+
+  useEffect(() => {
+    setCouponInput(couponCode);
+  }, [couponCode]);
 
   const handlePayment = async () => {
     try {
@@ -124,42 +201,6 @@ const CartPage = () => {
       toast.success("Payment Completed successfully");
     } catch (error) {
       setLoading(false);
-    }
-  };
-
-  const validateCoupon = async (code) => {
-    try {
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_API}/api/v1/coupon/validate`,
-        { code },
-        {
-          headers: {
-            Authorization: auth?.token,
-          },
-        },
-      );
-
-      if (data.success) {
-        const subtotal = cart.reduce(
-          (sum, item) => sum + Number(item.price) * (item.quantity || 1),
-          0,
-        );
-
-        const shipping = cart.reduce((sum, item) => {
-          if (item.shipping) {
-            return sum + Number(item.shippingCost || 0);
-          }
-          return sum;
-        }, 0);
-
-        const total = subtotal + shipping;
-
-        const discountAmount = total * (data.coupon.percentage / 100);
-
-        setDiscount(discountAmount);
-      }
-    } catch (error) {
-      console.log(error);
     }
   };
 
@@ -328,24 +369,53 @@ const CartPage = () => {
               </h5>
 
               <hr />
+              <div className="card p-3 mb-3">
+                <h5>Have a Coupon?</h5>
 
-              <h5>
-                Discount:
-                {formatCurrency(discount)}
-              </h5>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter coupon code"
+                    value={couponInput}
+                    onChange={(e) =>
+                      setCouponInput(e.target.value.toUpperCase())
+                    }
+                  />
 
-              <h3>
-                Pay:
-                {formatCurrency(finalTotal)}
-              </h3>
+                  <button className="btn btn-success" onClick={applyCoupon}>
+                    Apply
+                  </button>
+                </div>
 
-              <h4 className="text-danger">
-                Total :
+                {couponCode && (
+                  <div className="mt-2">
+                    <small className="text-success">
+                      Applied Coupon: <strong>{couponCode}</strong>
+                    </small>
+
+                    <br />
+
+                    <button
+                      className="btn btn-link text-danger p-0 mt-1"
+                      onClick={removeCoupon}
+                    >
+                      Remove Coupon
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <h4>
+                Total:{" "}
                 {getGrandTotal().toLocaleString("en-IN", {
                   style: "currency",
                   currency: "INR",
                 })}
               </h4>
+              <h5>Discount: {formatCurrency(discount)}</h5>
+
+              <h3 className="text-danger">Pay: {formatCurrency(finalTotal)}</h3>
               {auth?.user?.address ? (
                 <>
                   <div className="mb-3">
