@@ -11,12 +11,17 @@ import { useCart } from "../context/cart";
 
 const CartPage = () => {
   const { cart, setCart } = useCart();
-  const [auth] = useAuth();
+  const [auth, setAuth] = useAuth();
   const [clientToken, setClientToken] = useState("");
   const [instance, setInstance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [selectedAddress, setSelectedAddress] = useState(
+    auth?.user?.currentAddress || "",
+  );
+  const [showAddressInput, setShowAddressInput] = useState(false);
+  const [newAddress, setNewAddress] = useState("");
 
   const [couponCode, setCouponCode] = useState(
     localStorage.getItem("coupon") || "",
@@ -27,6 +32,46 @@ const CartPage = () => {
   );
 
   const navigate = useNavigate();
+
+  const handleAddAddress = async () => {
+    if (!newAddress.trim()) {
+      toast.error("Please enter an address");
+      return;
+    }
+
+    try {
+      const { data } = await axios.put(
+        `${process.env.REACT_APP_API}/api/v1/auth/profile`,
+        {
+          address: newAddress,
+        },
+        {
+          headers: {
+            Authorization: auth.token,
+          },
+        },
+      );
+
+      if (data.success) {
+        toast.success("Address added successfully");
+
+        const updatedAuth = {
+          ...auth,
+          user: data.updatedUser,
+        };
+
+        setAuth(updatedAuth);
+
+        localStorage.setItem("auth", JSON.stringify(updatedAuth));
+
+        setSelectedAddress(newAddress);
+        setNewAddress("");
+        setShowAddressInput(false);
+      }
+    } catch (err) {
+      toast.error("Unable to add address");
+    }
+  };
 
   const getSubtotal = () => {
     return cart.reduce(
@@ -145,6 +190,22 @@ const CartPage = () => {
     toast.success("Coupon removed");
   };
 
+  const handleAddressChange = async (address) => {
+    setSelectedAddress(address);
+
+    await axios.put(
+      `${process.env.REACT_APP_API}/api/v1/auth/profile`,
+      {
+        address,
+      },
+      {
+        headers: {
+          Authorization: auth.token,
+        },
+      },
+    );
+  };
+
   const getToken = async () => {
     try {
       const { data } = await axios.get(
@@ -174,13 +235,14 @@ const CartPage = () => {
   }, [couponCode, cart]);
 
   useEffect(() => {
-    console.log("Coupon Code:", couponCode);
-    console.log("Discount:", discount);
-  }, [couponCode, discount]);
-
-  useEffect(() => {
     setCouponInput(couponCode);
   }, [couponCode]);
+
+  useEffect(() => {
+    if (auth?.user?.currentAddress) {
+      setSelectedAddress(auth.user.currentAddress);
+    }
+  }, [auth?.user?.currentAddress]);
 
   const handlePayment = async () => {
     try {
@@ -192,6 +254,7 @@ const CartPage = () => {
           nonce,
           cart,
           couponCode,
+          deliveryAddress: selectedAddress,
         },
       );
       setLoading(false);
@@ -416,19 +479,50 @@ const CartPage = () => {
               <h5>Discount: {formatCurrency(discount)}</h5>
 
               <h3 className="text-danger">Pay: {formatCurrency(finalTotal)}</h3>
-              {auth?.user?.address ? (
+              {auth?.user?.currentAddress ? (
                 <>
                   <div className="mb-3">
-                    <h4 className="text-info-emphasis text-decoration-underline">
-                      Current Address
-                    </h4>
-                    <h5>{auth?.user?.address}</h5>
-                    <button
-                      className="btn btn-outline-warning mt-2"
-                      onClick={() => navigate("/dashboard/user/profile")}
+                    <h5>Select Delivery Address</h5>
+
+                    <select
+                      className="form-select"
+                      value={selectedAddress}
+                      onChange={(e) => handleAddressChange(e.target.value)}
                     >
-                      Update Address
+                      {auth?.user?.addresses?.length > 0 ? (
+                        auth.user.addresses.map((address, index) => (
+                          <option key={index} value={address}>
+                            {address}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No address found</option>
+                      )}
+                    </select>
+                    <button
+                      className="btn btn-outline-success mt-3"
+                      onClick={() => setShowAddressInput(!showAddressInput)}
+                    >
+                      + Add New Address
                     </button>
+                    {showAddressInput && (
+                      <div className="mt-3">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter new address"
+                          value={newAddress}
+                          onChange={(e) => setNewAddress(e.target.value)}
+                        />
+
+                        <button
+                          className="btn btn-primary mt-2"
+                          onClick={handleAddAddress}
+                        >
+                          Save Address
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -467,7 +561,7 @@ const CartPage = () => {
 
                     <button
                       className="btn btn-primary mb-3"
-                      disabled={loading || !instance || !auth?.user?.address}
+                      disabled={loading || !instance || !selectedAddress}
                       onClick={handlePayment}
                     >
                       {loading ? "Processing ..." : "Make Payment"}

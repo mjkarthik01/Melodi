@@ -8,11 +8,19 @@ const orderSchema = new mongoose.Schema(
         ref: "products",
       },
     ],
+
     payment: [],
+
     buyer: {
       type: mongoose.ObjectId,
       ref: "users",
     },
+
+    deliveryAddress: {
+      type: String,
+      required: true,
+    },
+
     status: {
       type: String,
       default: "Not Process",
@@ -21,7 +29,6 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
 // Add indexes for frequently queried fields
 orderSchema.index({ buyer: 1 });
 orderSchema.index({ buyer: 1, status: 1 }); // Compound index for filtering by buyer and status

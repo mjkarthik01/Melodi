@@ -38,7 +38,8 @@ export const registerController = async (req, res) => {
       name,
       email,
       phone,
-      address,
+      currentAddress: address,
+      addresses: [address],
       password: hashedPassword,
       answer,
     }).save();
@@ -91,7 +92,8 @@ export const loginController = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        address: user.address,
+        currentAddress: user.currentAddress,
+        addresses: user.addresses,
         role: user.role,
       },
       token,
@@ -153,20 +155,24 @@ export const updateProfileController = async (req, res) => {
       });
     }
     const hashedPassword = password ? await hashPassword(password) : undefined;
-    const updatedUser = await UserModel.findByIdAndUpdate(
-      req.user._id,
-      {
-        name: name || user.name,
-        password: hashedPassword || user.password,
-        phone: phone || user.phone,
-        address: address || user.address,
-      },
-      { new: true },
-    );
+    if (address && address !== user.currentAddress) {
+      user.currentAddress = address;
+
+      if (!user.addresses.includes(address)) {
+        user.addresses.push(address);
+      }
+    }
+
+    user.name = name || user.name;
+    user.phone = phone || user.phone;
+    user.password = hashedPassword || user.password;
+
+    await user.save();
+
     res.status(200).send({
       success: true,
       message: "Profile updated Successfully",
-      updatedUser,
+      updatedUser: user,
     });
   } catch (error) {
     res.status(400).send({

@@ -6,7 +6,18 @@ const userSchema = new mongoose.Schema(
     email: String,
     password: String,
     phone: String,
-    address: {},
+
+    currentAddress: {
+      type: String,
+      default: "",
+    },
+
+    addresses: [
+      {
+        type: String,
+      },
+    ],
+
     answer: String,
 
     role: {

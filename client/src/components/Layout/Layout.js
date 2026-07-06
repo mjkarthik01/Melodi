@@ -3,6 +3,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import { Helmet } from "react-helmet";
 import { Toaster } from "react-hot-toast";
+import ChatWidget from "../ChatWidget";
 
 const Layout = ({
   children,
@@ -26,6 +27,7 @@ const Layout = ({
         <Toaster position="top-center" />
         {children}
       </main>
+      <ChatWidget />
       <Footer />
     </div>
   );

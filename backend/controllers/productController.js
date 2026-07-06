@@ -464,6 +464,7 @@ export const braintreePaymentController = async (req, res) => {
             products: cart,
             payment: result,
             buyer: req.user._id,
+            deliveryAddress: req.body.deliveryAddress,
           }).save();
 
           res.json({ ok: true });

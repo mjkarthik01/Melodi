@@ -1,11 +1,10 @@
 import Banner from "../models/BannerModel.js";
-import fs from "fs";
-import path from "path";
+import cloudinary from "../config/cloudinary.js";
 
+// ================= UPLOAD BANNER =================
 export const uploadBanner = async (req, res) => {
   try {
     const { title } = req.fields;
-
     const image = req.files?.image;
 
     if (!image) {
@@ -15,23 +14,15 @@ export const uploadBanner = async (req, res) => {
       });
     }
 
-    // unique filename
-    const fileName = `${Date.now()}-${image.name}`;
-
-    const uploadDir = path.join(process.cwd(), "uploads");
-
-    // create uploads folder if missing
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    const uploadPath = path.join(uploadDir, fileName);
-
-    fs.copyFileSync(image.path, uploadPath);
+    // upload to Cloudinary
+    const result = await cloudinary.uploader.upload(image.path, {
+      folder: "banners",
+    });
 
     const banner = await Banner.create({
       title,
-      image: `/uploads/${fileName}`,
+      image: result.secure_url, // public URL
+      cloudinary_id: result.public_id, // needed for delete
       isActive: true,
     });
 
@@ -42,7 +33,6 @@ export const uploadBanner = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
     res.status(500).send({
       success: false,
       message: "Upload failed",
@@ -51,6 +41,7 @@ export const uploadBanner = async (req, res) => {
   }
 };
 
+// ================= GET BANNERS =================
 export const getBanners = async (req, res) => {
   try {
     const banners = await Banner.find({}).sort({ createdAt: -1 });
@@ -69,6 +60,7 @@ export const getBanners = async (req, res) => {
   }
 };
 
+// ================= DELETE BANNER =================
 export const deleteBanner = async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);
@@ -80,13 +72,9 @@ export const deleteBanner = async (req, res) => {
       });
     }
 
-    const imagePath = path.join(
-      process.cwd(),
-      banner.image.replace(/^\/+/, ""),
-    );
-
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // delete from Cloudinary
+    if (banner.cloudinary_id) {
+      await cloudinary.uploader.destroy(banner.cloudinary_id);
     }
 
     await Banner.findByIdAndDelete(req.params.id);
@@ -105,6 +93,7 @@ export const deleteBanner = async (req, res) => {
   }
 };
 
+// ================= TOGGLE BANNER =================
 export const toggleBanner = async (req, res) => {
   try {
     const banner = await Banner.findById(req.params.id);

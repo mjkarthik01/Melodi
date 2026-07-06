@@ -11,7 +11,6 @@ const getPadding = (width) => {
 
 const AdSlider = () => {
   const [centerPadding, setCenterPadding] = useState("120px");
-
   const [uploadedBanners, setUploadedBanners] = useState([]);
 
   const defaultImages = [
@@ -30,7 +29,7 @@ const AdSlider = () => {
       if (data?.success) {
         const activeBanners = data.banners
           .filter((banner) => banner.isActive)
-          .map((banner) => `${process.env.REACT_APP_API}${banner.image}`);
+          .map((banner) => banner.image); // ✅ FIXED (no API prefix)
 
         setUploadedBanners(activeBanners);
       }
@@ -47,7 +46,6 @@ const AdSlider = () => {
     };
 
     handleResize();
-
     window.addEventListener("resize", handleResize);
 
     return () => window.removeEventListener("resize", handleResize);

@@ -84,8 +84,6 @@ const AdminDashboard = () => {
         formData,
       );
 
-      console.log("UPLOAD RESPONSE:", data);
-
       if (!data?.success) {
         message.error(data?.message || "Upload failed");
         return;
@@ -230,7 +228,7 @@ const AdminDashboard = () => {
                 <Col xs={24} sm={12} lg={8} key={banner._id}>
                   <Card hoverable>
                     <img
-                      src={`${process.env.REACT_APP_API}${banner.image}`}
+                      src={banner.image}
                       alt={banner.title}
                       style={{
                         width: "100%",
