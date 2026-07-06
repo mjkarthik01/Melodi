@@ -7,7 +7,7 @@ const ChatWidget = () => {
   const [message, setMessage] = useState("");
 
   const location = useLocation();
-  const adminWhatsApp = "918870251610";
+  const adminWhatsApp = "918291895854";
 
   // 🧠 Extract slug from URL
   const getSlugFromURL = () => {
