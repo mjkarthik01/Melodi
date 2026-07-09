@@ -25,8 +25,7 @@ const ChatWidget = () => {
         "",
         "Please provide more details.",
         "",
-        `🖼 Product Image: ${process.env.REACT_APP_API}/api/v1/product/product-photo/${chatProduct._id}`,
-        `🔗 Product Link: ${shareUrl}`,
+        ` Product Link: ${shareUrl}`,
       ].join("\n");
     }
 

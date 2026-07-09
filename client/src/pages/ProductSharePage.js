@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Helmet } from "react-helmet";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import Loader from "../components/UI/Loader";
@@ -46,24 +45,9 @@ const ProductSharePage = () => {
   }
 
   const imageUrl = `${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`;
-  const shareUrl = `${window.location.origin}/share/product/${product.slug}`;
-  const description = `Price: ₹${product.price}\nColor: ${product.colors?.[0] || "Not selected"}\n${product.description?.substring(0, 120) || "Premium product"}`;
 
   return (
     <>
-      <Helmet>
-        <title>{product.name}</title>
-        <meta property="og:title" content={product.name} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={imageUrl} />
-        <meta property="og:url" content={shareUrl} />
-        <meta property="og:type" content="product" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={product.name} />
-        <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={imageUrl} />
-      </Helmet>
-
       <div className="container section">
         <div className="row align-items-center">
           <div className="col-md-6">
