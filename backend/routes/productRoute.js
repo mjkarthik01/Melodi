@@ -5,6 +5,7 @@ import {
   braintreeTokenController,
   createProductController,
   deleteProductController,
+  getProductByIdController,
   getProductController,
   getSingleProductController,
   productCategoryController,
@@ -14,6 +15,7 @@ import {
   productPhotoController,
   relatedProductController,
   searchProductController,
+  submitProductRatingController,
   updateProductController,
 } from "../controllers/productController.js";
 import formidable from "express-formidable";
@@ -30,7 +32,9 @@ router.post(
 
 router.get("/get-product", getProductController);
 router.get("/get-product/:slug", getSingleProductController);
+router.get("/get-product-by-id/:pid", getProductByIdController);
 router.get("/product-photo/:pid", productPhotoController);
+router.post("/rate/:pid", requireSignIN, submitProductRatingController);
 
 router.delete("/delete-product/:pid", deleteProductController);
 

@@ -9,6 +9,7 @@ import "antd/dist/reset.css";
 import { SearchProvider } from "./context/search";
 import { CartProvider } from "./context/cart";
 import { WishlistProvider } from "./context/wishlist";
+import { ChatProvider } from "./context/chat";
 import ScrollToTop from "./components/ScrollToTop";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -16,10 +17,12 @@ root.render(
     <SearchProvider>
       <CartProvider>
         <WishlistProvider>
-          <BrowserRouter>
-            <ScrollToTop />
-            <App />
-          </BrowserRouter>
+          <ChatProvider>
+            <BrowserRouter>
+              <ScrollToTop />
+              <App />
+            </BrowserRouter>
+          </ChatProvider>
         </WishlistProvider>
       </CartProvider>
     </SearchProvider>

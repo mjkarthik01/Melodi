@@ -14,6 +14,15 @@ const ProductCard = ({
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgVisible, setImgVisible] = useState(false);
   const [selectedColor, setSelectedColor] = useState("");
+  // const [displayRating, setDisplayRating] = useState(product?.rating || 0);
+  // const [ratingCount, setRatingCount] = useState(product?.ratingCount || 0);
+  // const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [showColorsSection, setShowColorsSection] = useState(() => {
+    if (typeof window === "undefined") return true;
+
+    const savedValue = localStorage.getItem("productCardColorsVisible");
+    return savedValue === null ? true : savedValue === "true";
+  });
 
   const showSkeleton = loading || !imgLoaded;
 
@@ -22,6 +31,47 @@ const ProductCard = ({
       setSelectedColor(product.colors[0]);
     }
   }, [product]);
+
+  useEffect(() => {
+    const readVisibility = () => {
+      if (typeof window === "undefined") return true;
+
+      const savedValue = localStorage.getItem("productCardColorsVisible");
+      return savedValue === null ? true : savedValue === "true";
+    };
+
+    const syncVisibility = () => {
+      setShowColorsSection(readVisibility());
+    };
+
+    syncVisibility();
+
+    const handleVisibilityChange = (event) => {
+      setShowColorsSection(event?.detail?.show ?? readVisibility());
+    };
+
+    const handleStorageChange = (event) => {
+      if (event.key === "productCardColorsVisible") {
+        setShowColorsSection(
+          event.newValue === null ? true : event.newValue === "true",
+        );
+      }
+    };
+
+    window.addEventListener(
+      "product-card-colors-toggle",
+      handleVisibilityChange,
+    );
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener(
+        "product-card-colors-toggle",
+        handleVisibilityChange,
+      );
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const smoothScrollBy = (element, distance, duration = 3000) => {
     const start = element.scrollLeft;
@@ -58,6 +108,44 @@ const ProductCard = ({
       300, // duration (increase = slower, smoother)
     );
   };
+
+  // const handleRatingChange = async (value) => {
+  //   const productId = product?._id;
+
+  //   if (!productId) return;
+
+  //   setDisplayRating(value);
+
+  //   if (!auth?.token) {
+  //     message.info("Please login to rate this product");
+  //     return;
+  //   }
+
+  //   setIsSubmittingRating(true);
+
+  //   try {
+  //     const { data } = await axios.post(
+  //       `${process.env.REACT_APP_API}/api/v1/product/rate/${productId}`,
+  //       { value },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${auth.token}`,
+  //         },
+  //       },
+  //     );
+
+  //     if (data?.success) {
+  //       setDisplayRating(data?.product?.rating || value);
+  //       setRatingCount(data?.product?.ratingCount || ratingCount);
+  //       message.success("Thank you for your rating");
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to save product rating", error);
+  //     message.error("Unable to submit rating right now");
+  //   } finally {
+  //     setIsSubmittingRating(false);
+  //   }
+  // };
 
   return (
     <article className="product-card">
@@ -143,71 +231,74 @@ const ProductCard = ({
                   )}
                 </span>
               </span>
-              <span className="product-card__rating">4.8 ★</span>
             </div>
 
-            <div className="mb-3">
-              <strong className="text-muted">Select Color</strong>
+            {showColorsSection && (
+              <div className="mb-3">
+                <strong className="text-muted">Select Color</strong>
 
-              <div className="d-flex align-items-center mt-2">
-                {/* Prev button */}
-                <button
-                  type="button"
-                  className="btn btn-light btn--small"
-                  onClick={() => scrollColors("prev")}
-                >
-                  ‹
-                </button>
+                <div className="d-flex align-items-center mt-2">
+                  {/* Prev button */}
+                  <button
+                    type="button"
+                    className="btn btn-light btn--small"
+                    onClick={() => scrollColors("prev")}
+                  >
+                    ‹
+                  </button>
 
-                {/* Scroll container */}
-                <div
-                  ref={colorSliderRef}
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    overflowX: "auto",
-                    scrollBehavior: "smooth",
-                    padding: "5px",
-                    maxWidth: "225px",
-                    scrollbarWidth: "none",
-                  }}
-                  className="color-scroll"
-                >
-                  {product?.colors?.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      aria-label={`Select ${color}`}
-                      onClick={() => setSelectedColor(color)}
-                      style={{
-                        minWidth: 35,
-                        height: 35,
-                        borderRadius: "50%",
-                        background: color,
-                        cursor: "pointer",
-                        flex: "0 0 auto",
-                        boxShadow:
-                          selectedColor === color
-                            ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
-                            : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
-                        border:
-                          selectedColor === color ? "0.5px solid gray" : "none",
-                        opacity: selectedColor === color ? 1 : 0.8,
-                      }}
-                    />
-                  ))}
+                  {/* Scroll container */}
+                  <div
+                    ref={colorSliderRef}
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      overflowX: "auto",
+                      scrollBehavior: "smooth",
+                      padding: "5px",
+                      maxWidth: "225px",
+                      scrollbarWidth: "none",
+                    }}
+                    className="color-scroll"
+                  >
+                    {product?.colors?.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        aria-label={`Select ${color}`}
+                        onClick={() => setSelectedColor(color)}
+                        style={{
+                          minWidth: 35,
+                          height: 35,
+                          borderRadius: "50%",
+                          background: color,
+                          cursor: "pointer",
+                          flex: "0 0 auto",
+                          boxShadow:
+                            selectedColor === color
+                              ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
+                              : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
+                          border:
+                            selectedColor === color
+                              ? "0.5px solid gray"
+                              : "none",
+                          opacity: selectedColor === color ? 1 : 0.8,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Next button */}
+                  <button
+                    type="button"
+                    className="btn btn-light btn--small"
+                    onClick={() => scrollColors("next")}
+                  >
+                    ›
+                  </button>
                 </div>
-
-                {/* Next button */}
-                <button
-                  type="button"
-                  className="btn btn-light btn--small"
-                  onClick={() => scrollColors("next")}
-                >
-                  ›
-                </button>
               </div>
-            </div>
+            )}
 
             {onAddToCart && (
               <div className="product-card__actions">

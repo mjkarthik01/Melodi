@@ -1,46 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { WhatsAppOutlined, CloseOutlined } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
+import { useChat } from "../context/chat";
 
 const ChatWidget = () => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [hasManualEdit, setHasManualEdit] = useState(false);
+  const { chatProduct, selectedColor } = useChat();
 
-  const location = useLocation();
-  const adminWhatsApp = "918291895854";
+  const adminWhatsApp = "918870251610";
 
-  // 🧠 Extract slug from URL
-  const getSlugFromURL = () => {
-    const parts = location.pathname.split("/");
-    if (parts[1] === "product" && parts[2]) {
-      return parts[2];
-    }
-    return null;
-  };
+  const generateMessage = useMemo(() => {
+    if (chatProduct) {
+      const shareUrl = `${window.location.origin}/share/product/${chatProduct.slug}`;
 
-  const slug = getSlugFromURL();
-
-  const formatName = (text) => text?.replace(/-/g, " ");
-
-  // 🧠 Generate base message
-  const generateMessage = () => {
-    if (slug) {
-      return `Hi 👋 I'm interested in this product:\n\n🛍️ ${formatName(
-        slug,
-      )}\n\nPlease give me more details.`;
-    }
-
-    if (location.pathname.includes("cart")) {
-      return "Hi 👋 I need help with my cart/checkout.";
+      return [
+        "Hi 👋",
+        "",
+        "I'm interested in this product.",
+        "",
+        `🛍 Product: ${chatProduct.name}`,
+        `💰 Price: ₹${chatProduct.price}`,
+        `🎨 Color: ${selectedColor || "Not selected"}`,
+        "",
+        "Please provide more details.",
+        "",
+        `🖼 Product Image: ${process.env.REACT_APP_API}/api/v1/product/product-photo/${chatProduct._id}`,
+        `🔗 Product Link: ${shareUrl}`,
+      ].join("\n");
     }
 
     return "Hi 👋 I need help regarding your products.";
-  };
+  }, [chatProduct, selectedColor]);
 
-  // ✅ Update message when route changes
   useEffect(() => {
-    setMessage(generateMessage());
-  }, [location.pathname]);
+    if (!hasManualEdit) {
+      setMessage(generateMessage);
+    }
+  }, [generateMessage, hasManualEdit]);
 
   // ⏱ Auto popup after 5 seconds
   useEffect(() => {
@@ -49,14 +46,20 @@ const ChatWidget = () => {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, []);
 
   // 💬 APPEND quick reply instead of replacing
   const addQuickReply = (text) => {
     setMessage((prev) => {
-      if (!prev) return text;
-      return prev + "\n" + text;
+      const trimmedPrev = prev.trim();
+      const trimmedText = text.trim();
+
+      if (!trimmedPrev) return trimmedText;
+      if (trimmedPrev.endsWith(trimmedText)) return trimmedPrev;
+
+      return `${trimmedPrev}\n${trimmedText}`;
     });
+    setHasManualEdit(true);
   };
 
   const quickReplies = [
@@ -66,13 +69,17 @@ const ChatWidget = () => {
     "I want to order this",
   ];
 
-  // 📍 Include page URL in WhatsApp message
+  // 📍 Include product share URL in WhatsApp message
   const openWhatsApp = (customMsg) => {
     const finalMessage = customMsg || message;
 
+    const shareUrl = chatProduct
+      ? `${window.location.origin}/share/product/${chatProduct.slug}`
+      : window.location.href;
+
     const fullMessage = `${finalMessage}
 
-🌐 View Product: ${window.location.href}`;
+🌐 View Product: ${shareUrl}`;
 
     const url = `https://wa.me/${adminWhatsApp}?text=${encodeURIComponent(
       fullMessage,
@@ -100,7 +107,10 @@ const ChatWidget = () => {
 
             <textarea
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setHasManualEdit(true);
+              }}
               rows={4}
               className="chat-input"
             />

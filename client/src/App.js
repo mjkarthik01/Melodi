@@ -21,6 +21,7 @@ import HomePage from "./pages/HomePage";
 import PageNotFound from "./pages/PageNotFound";
 import Policy from "./pages/Policy";
 import ProductDetails from "./pages/ProductDetails";
+import ProductSharePage from "./pages/ProductSharePage";
 import Search from "./pages/Search";
 import Dashboard from "./pages/user/Dashboard";
 import Orders from "./pages/user/Orders";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/coupon/:code" element={<CouponRedirect />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:slug" element={<ProductDetails />} />
+            <Route path="/share/product/:slug" element={<ProductSharePage />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/cart" element={<CartPage />} />

@@ -43,6 +43,31 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    ratingCount: {
+      type: Number,
+      default: 0,
+    },
+    ratings: [
+      {
+        user: {
+          type: mongoose.ObjectId,
+          ref: "users",
+        },
+        value: {
+          type: Number,
+          min: 1,
+          max: 5,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true },
 );

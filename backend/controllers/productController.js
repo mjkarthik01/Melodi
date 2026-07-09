@@ -121,6 +121,97 @@ export const getSingleProductController = async (req, res) => {
   }
 };
 
+export const getProductByIdController = async (req, res) => {
+  try {
+    const product = await ProductModel.findById(req.params.pid)
+      .select("-photo")
+      .populate("category")
+      .lean();
+
+    if (!product) {
+      return res.status(404).send({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.status(200).send({
+      success: true,
+      message: "Fetched product successfully",
+      product,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error getting product",
+      error,
+    });
+  }
+};
+
+export const submitProductRatingController = async (req, res) => {
+  try {
+    const { value } = req.body;
+    const productId = req.params.pid;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).send({
+        success: false,
+        message: "Please login to rate this product",
+      });
+    }
+
+    const parsedValue = Number(value);
+    if (!Number.isFinite(parsedValue) || parsedValue < 1 || parsedValue > 5) {
+      return res.status(400).send({
+        success: false,
+        message: "Rating must be between 1 and 5",
+      });
+    }
+
+    const product = await ProductModel.findById(productId);
+    if (!product) {
+      return res.status(404).send({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    const existingRatingIndex = product.ratings.findIndex(
+      (entry) => entry.user?.toString() === userId.toString(),
+    );
+
+    if (existingRatingIndex >= 0) {
+      product.ratings[existingRatingIndex].value = parsedValue;
+      product.ratings[existingRatingIndex].createdAt = new Date();
+    } else {
+      product.ratings.push({ user: userId, value: parsedValue });
+    }
+
+    const totalRating = product.ratings.reduce(
+      (sum, entry) => sum + entry.value,
+      0,
+    );
+    product.rating = Number((totalRating / product.ratings.length).toFixed(1));
+    product.ratingCount = product.ratings.length;
+
+    await product.save();
+
+    res.status(200).send({
+      success: true,
+      message: "Rating submitted successfully",
+      product,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error submitting rating",
+      error,
+    });
+  }
+};
+
 export const productPhotoController = async (req, res) => {
   try {
     const product = await ProductModel.findById(req.params.pid).select("photo");

@@ -7,6 +7,7 @@ import Loader from "../components/UI/Loader";
 import ProductCard from "../components/UI/ProductCard";
 import SectionHeader from "../components/UI/SectionHeader";
 import { useCart } from "../context/cart";
+import { useChat } from "../context/chat";
 import { useWishlist } from "../context/wishlist";
 
 const ProductDetails = () => {
@@ -17,7 +18,13 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const { cart, setCart } = useCart();
   const [wishlist, setWishlist] = useWishlist();
-  const [selectedColor, setSelectedColor] = useState("");
+  const { setChatProduct, selectedColor, setSelectedColor } = useChat();
+  const [showColorsSection, setShowColorsSection] = useState(() => {
+    if (typeof window === "undefined") return true;
+
+    const savedValue = localStorage.getItem("productCardColorsVisible");
+    return savedValue === null ? true : savedValue === "true";
+  });
 
   useEffect(() => {
     if (params?.slug) getProduct();
@@ -25,10 +32,55 @@ const ProductDetails = () => {
   }, [params?.slug]);
 
   useEffect(() => {
-    if (product?.colors?.length) {
-      setSelectedColor(product.colors[0]);
+    if (product) {
+      setChatProduct(product);
     }
-  }, [product]);
+  }, [product, setChatProduct]);
+
+  useEffect(() => {
+    if (product?.colors?.length) {
+      const nextColor = selectedColor || product.colors[0];
+      setSelectedColor(nextColor);
+    }
+  }, [product, selectedColor, setSelectedColor]);
+
+  useEffect(() => {
+    return () => {
+      setChatProduct(null);
+      setSelectedColor("");
+    };
+  }, [setChatProduct, setSelectedColor]);
+
+  useEffect(() => {
+    const readVisibility = () => {
+      if (typeof window === "undefined") return true;
+
+      const savedValue = localStorage.getItem("productCardColorsVisible");
+      return savedValue === null ? true : savedValue === "true";
+    };
+
+    const syncVisibility = () => {
+      setShowColorsSection(readVisibility());
+    };
+
+    syncVisibility();
+
+    const handleVisibilityChange = (event) => {
+      setShowColorsSection(event?.detail?.show ?? readVisibility());
+    };
+
+    window.addEventListener(
+      "product-card-colors-toggle",
+      handleVisibilityChange,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "product-card-colors-toggle",
+        handleVisibilityChange,
+      );
+    };
+  }, []);
 
   const getProduct = async () => {
     try {
@@ -167,34 +219,36 @@ const ProductDetails = () => {
               </button>
             </div>
 
-            <div className="mb-3">
-              <strong className="text-muted">Select Color</strong>
+            {showColorsSection && (
+              <div className="mb-3">
+                <strong className="text-muted">Select Color</strong>
 
-              <div className="d-flex gap-2 mt-2">
-                {product?.colors?.map((color) => (
-                  <div
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    style={{
-                      width: 35,
-                      height: 35,
-                      borderRadius: "50%",
-                      background: color,
-                      cursor: "pointer",
-                      boxShadow:
-                        selectedColor === color
-                          ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
-                          : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
-                      border:
-                        selectedColor === color
-                          ? `6px solid ${color}`
-                          : "1px solid #ddd",
-                      opacity: selectedColor === color ? 1 : 0.8,
-                    }}
-                  />
-                ))}
+                <div className="d-flex gap-2 mt-2">
+                  {product?.colors?.map((color) => (
+                    <div
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      style={{
+                        width: 35,
+                        height: 35,
+                        borderRadius: "50%",
+                        background: color,
+                        cursor: "pointer",
+                        boxShadow:
+                          selectedColor === color
+                            ? "rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px"
+                            : "rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px ",
+                        border:
+                          selectedColor === color
+                            ? `6px solid ${color}`
+                            : "1px solid #ddd",
+                        opacity: selectedColor === color ? 1 : 0.8,
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
