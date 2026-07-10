@@ -103,10 +103,16 @@ export const getProductController = async (req, res) => {
 
 export const getSingleProductController = async (req, res) => {
   try {
-    const product = await ProductModel.findOne({ slug: req.params.slug })
+    const slug = req.params.slug;
+    const escapedSlug = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const product = await ProductModel.findOne({
+      slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
+    })
       .select("-photo")
       .populate("category")
       .lean();
+
     res.status(200).send({
       success: true,
       message: "Fetched single Product successfully",

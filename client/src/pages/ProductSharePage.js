@@ -1,76 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import Loader from "../components/UI/Loader";
+import React from "react";
+import { Navigate, useParams } from "react-router-dom";
 
 const ProductSharePage = () => {
   const { slug } = useParams();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const { data } = await axios.get(
-          `${process.env.REACT_APP_API}/api/v1/product/get-product/${slug}`,
-        );
-
-        setProduct(data?.product || null);
-      } catch (error) {
-        console.error("Failed to fetch shared product", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchProduct();
-    }
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <div className="container section">
-        <Loader />
-      </div>
-    );
+  if (!slug) {
+    return <Navigate to="/" replace />;
   }
 
-  if (!product) {
-    return (
-      <div className="container section">
-        <h2>Product not found</h2>
-      </div>
-    );
-  }
-
-  const imageUrl = `${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`;
-
-  return (
-    <>
-      <div className="container section">
-        <div className="row align-items-center">
-          <div className="col-md-6">
-            <img
-              src={imageUrl}
-              alt={product.name}
-              style={{ width: "100%", borderRadius: "12px" }}
-            />
-          </div>
-          <div className="col-md-6">
-            <h2>{product.name}</h2>
-            <p className="text-muted">{product.description}</p>
-            <p>
-              <strong>Price:</strong> ₹{product.price}
-            </p>
-            <p>
-              <strong>Color:</strong> {product.colors?.[0] || "Not selected"}
-            </p>
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  return <Navigate to={`/product/${slug}`} replace />;
 };
 
 export default ProductSharePage;

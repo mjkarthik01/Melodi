@@ -40,8 +40,11 @@ app.use("/api/v1/coupon", couponRoute);
 
 app.get("/share/product/:slug", async (req, res) => {
   try {
+    const slug = req.params.slug;
+    const escapedSlug = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
     const product = await ProductModel.findOne({
-      slug: req.params.slug,
+      slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
     }).lean();
 
     if (!product) {

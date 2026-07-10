@@ -12,7 +12,7 @@ const ChatWidget = () => {
 
   const generateMessage = useMemo(() => {
     if (chatProduct) {
-      const shareUrl = `${window.location.origin}/share/product/${chatProduct.slug}`;
+      const shareUrl = `${window.location.origin}/product/${chatProduct.slug}`;
 
       return [
         "Hi 👋",
@@ -73,7 +73,7 @@ const ChatWidget = () => {
     const finalMessage = customMsg || message;
 
     const shareUrl = chatProduct
-      ? `${window.location.origin}/share/product/${chatProduct.slug}`
+      ? `${window.location.origin}/product/${chatProduct.slug}`
       : window.location.href;
 
     const fullMessage = `${finalMessage}

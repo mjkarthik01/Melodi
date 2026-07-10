@@ -1,4 +1,10 @@
-import { Route, Routes, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import AnimatedRoutes from "./components/Layout/AnimatedRoutes";
 import AdminRoute from "./components/Routes/AdminRoute";
 import PrivateRoute from "./components/Routes/Private";
@@ -21,7 +27,6 @@ import HomePage from "./pages/HomePage";
 import PageNotFound from "./pages/PageNotFound";
 import Policy from "./pages/Policy";
 import ProductDetails from "./pages/ProductDetails";
-import ProductSharePage from "./pages/ProductSharePage";
 import Search from "./pages/Search";
 import Dashboard from "./pages/user/Dashboard";
 import Orders from "./pages/user/Orders";
@@ -31,6 +36,12 @@ import Layout from "./components/Layout/Layout";
 import AdminAccount from "./pages/Admin/AdminAccount";
 import CreateCoupon from "./pages/Admin/CreateCoupon";
 import CouponRedirect from "./pages/CouponRedirect";
+
+const RedirectToProduct = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/product/${slug}`} replace />;
+};
+
 function App() {
   const location = useLocation();
   return (
@@ -41,7 +52,10 @@ function App() {
             <Route path="/coupon/:code" element={<CouponRedirect />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:slug" element={<ProductDetails />} />
-            <Route path="/share/product/:slug" element={<ProductSharePage />} />
+            <Route
+              path="/share/product/:slug"
+              element={<RedirectToProduct />}
+            />
             <Route path="/categories" element={<Categories />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/cart" element={<CartPage />} />
