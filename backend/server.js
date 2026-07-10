@@ -5,6 +5,10 @@ import express from "express";
 import colors from "colors";
 import morgan from "morgan";
 import compression from "compression";
+import cors from "cors";
+import path from "path";
+import fs from "fs"; // Required to parse index.html template
+
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoute.js";
 import categoryRoute from "./routes/categoryRoute.js";
@@ -12,8 +16,6 @@ import productRoute from "./routes/productRoute.js";
 import bannerRoute from "./routes/bannerRoute.js";
 import paymentConfigRoutes from "./routes/paymentConfigRoutes.js";
 import couponRoute from "./routes/couponRoute.js";
-import cors from "cors";
-import path from "path";
 import ProductModel from "./models/ProductModel.js";
 
 connectDB();
@@ -28,15 +30,43 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(morgan("dev"));
 
+// API Routing
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", categoryRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/banner", bannerRoute);
+app.use("/api/v1/admin", paymentConfigRoutes);
+app.use("/api/v1/coupon", couponRoute);
+
+// Static uploads directory
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
-app.use("/api/v1/admin", paymentConfigRoutes);
+// Helper mapping for dynamic location profiles
+const getLocationMetadata = (locationName, siteUrl) => {
+  const locations = {
+    riyadh: {
+      title: "Sweetie Ayman - Riyadh Boutique",
+      description:
+        "Modern luxury bags curated specifically for Riyadh. Fast regional shipping.",
+      logo: `${siteUrl}/uploads/logos/riyadh-logo.png`,
+    },
+    dubai: {
+      title: "Sweetie Ayman - Dubai Handbags",
+      description:
+        "Chic luxury bags curated for Dubai. Seamless checkout and returns.",
+      logo: `${siteUrl}/uploads/logos/dubai-logo.png`,
+    },
+  };
 
-app.use("/api/v1/coupon", couponRoute);
+  return (
+    locations[locationName.toLowerCase()] || {
+      title: "Sweetie Ayman",
+      description:
+        "Modern bags, curated for everyday luxury. Fast delivery and easy returns.",
+      logo: `${siteUrl}/ShopLogo1.png`,
+    }
+  );
+};
 
 const renderProductMetaHtml = (product, siteUrl, routeType = "product") => {
   const productImageUrl = `${siteUrl}/api/v1/product/product-photo/${product._id}`;
@@ -85,6 +115,39 @@ const sendNotFoundHtml = (res) => {
 </html>`);
 };
 
+// --- DYNAMIC LOCATION ROUTE ---
+app.get("/shop/:location", (req, res) => {
+  try {
+    const locationName = req.params.location;
+    const siteUrl =
+      process.env.CLIENT_URL ||
+      process.env.APP_URL ||
+      "https://sweetieayman.com";
+    const meta = getLocationMetadata(locationName, siteUrl);
+
+    // Adjust build/index.html to public/index.html depending on your deployment directory setup
+    const templatePath = path.join(process.cwd(), "build", "index.html");
+
+    fs.readFile(templatePath, "utf8", (err, htmlData) => {
+      if (err) {
+        console.error("Error reading index.html layout:", err);
+        return res.status(500).send("Internal Template Error");
+      }
+
+      const customizedHtml = htmlData
+        .replace(/__DYNAMIC_TITLE__/g, meta.title)
+        .replace(/__DYNAMIC_DESC__/g, meta.description)
+        .replace(/__DYNAMIC_LOGO__/g, meta.logo);
+
+      res.status(200).type("html").send(customizedHtml);
+    });
+  } catch (error) {
+    console.error("Location route failure", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Product Routing
 app.get("/product/:slug", async (req, res) => {
   try {
     const slug = req.params.slug;
@@ -94,29 +157,16 @@ app.get("/product/:slug", async (req, res) => {
       slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
     }).lean();
 
-    if (!product) {
-      return sendNotFoundHtml(res);
-    }
+    if (!product) return sendNotFoundHtml(res);
 
     const siteUrl =
       process.env.CLIENT_URL ||
       process.env.APP_URL ||
       "https://sweetieayman.com";
-
     res.status(200).type("html").send(renderProductMetaHtml(product, siteUrl));
   } catch (error) {
     console.error("Product route error", error);
-    res.status(500).type("html").send(`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Product error</title>
-  </head>
-  <body>
-    <h1>Unable to load product</h1>
-  </body>
-</html>`);
+    res.status(500).type("html").send("Unable to load product");
   }
 });
 
@@ -129,41 +179,32 @@ app.get("/share/product/:slug", async (req, res) => {
       slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
     }).lean();
 
-    if (!product) {
-      return sendNotFoundHtml(res);
-    }
+    if (!product) return sendNotFoundHtml(res);
 
     const siteUrl =
       process.env.CLIENT_URL ||
       process.env.APP_URL ||
       "https://sweetieayman.com";
-
     res
       .status(200)
       .type("html")
       .send(renderProductMetaHtml(product, siteUrl, "share"));
   } catch (error) {
     console.error("Share route error", error);
-    res.status(500).type("html").send(`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Product error</title>
-  </head>
-  <body>
-    <h1>Unable to load product</h1>
-  </body>
-</html>`);
+    res.status(500).type("html").send("Unable to load product");
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("<h1>Welcome to ecommerce app<h1>");
+// Serving remaining build-created static client components
+app.use(express.static(path.join(process.cwd(), "build")));
+
+// Global fallback architecture
+//  ANOTHER GREAT OPTION
+app.use((req, res) => {
+  res.sendFile(path.join(process.cwd(), "build", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`.bgCyan.black);
 });
