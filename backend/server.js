@@ -38,40 +38,14 @@ app.use("/api/v1/admin", paymentConfigRoutes);
 
 app.use("/api/v1/coupon", couponRoute);
 
-app.get("/share/product/:slug", async (req, res) => {
-  try {
-    const slug = req.params.slug;
-    const escapedSlug = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const renderProductMetaHtml = (product, siteUrl, routeType = "product") => {
+  const productImageUrl = `${siteUrl}/api/v1/product/product-photo/${product._id}`;
+  const shareUrl = `${siteUrl}/${routeType === "share" ? "share/product" : "product"}/${product.slug}`;
+  const description = `${product.description || "Premium product"}`
+    .replace(/\s+/g, " ")
+    .trim();
 
-    const product = await ProductModel.findOne({
-      slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
-    }).lean();
-
-    if (!product) {
-      return res.status(404).type("html").send(`<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Product not found</title>
-  </head>
-  <body>
-    <h1>Product not found</h1>
-  </body>
-</html>`);
-    }
-
-    const siteUrl =
-      process.env.CLIENT_URL ||
-      process.env.APP_URL ||
-      "https://sweetieayman.com";
-    const productImageUrl = `${siteUrl}/api/v1/product/product-photo/${product._id}`;
-    const shareUrl = `${siteUrl}/share/product/${product.slug}`;
-    const description = `${product.description || "Premium product"}`
-      .replace(/\s+/g, " ")
-      .trim();
-
-    const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -87,6 +61,7 @@ app.get("/share/product/:slug", async (req, res) => {
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${productImageUrl}" />
     <meta name="description" content="${description}" />
+    <link rel="canonical" href="${shareUrl}" />
   </head>
   <body>
     <h1>${product.name}</h1>
@@ -94,8 +69,79 @@ app.get("/share/product/:slug", async (req, res) => {
     <img src="${productImageUrl}" alt="${product.name}" style="max-width: 400px;" />
   </body>
 </html>`;
+};
 
-    res.status(200).type("html").send(html);
+const sendNotFoundHtml = (res) => {
+  res.status(404).type("html").send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product not found</title>
+  </head>
+  <body>
+    <h1>Product not found</h1>
+  </body>
+</html>`);
+};
+
+app.get("/product/:slug", async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const escapedSlug = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const product = await ProductModel.findOne({
+      slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
+    }).lean();
+
+    if (!product) {
+      return sendNotFoundHtml(res);
+    }
+
+    const siteUrl =
+      process.env.CLIENT_URL ||
+      process.env.APP_URL ||
+      "https://sweetieayman.com";
+
+    res.status(200).type("html").send(renderProductMetaHtml(product, siteUrl));
+  } catch (error) {
+    console.error("Product route error", error);
+    res.status(500).type("html").send(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product error</title>
+  </head>
+  <body>
+    <h1>Unable to load product</h1>
+  </body>
+</html>`);
+  }
+});
+
+app.get("/share/product/:slug", async (req, res) => {
+  try {
+    const slug = req.params.slug;
+    const escapedSlug = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const product = await ProductModel.findOne({
+      slug: { $regex: new RegExp(`^${escapedSlug}$`, "i") },
+    }).lean();
+
+    if (!product) {
+      return sendNotFoundHtml(res);
+    }
+
+    const siteUrl =
+      process.env.CLIENT_URL ||
+      process.env.APP_URL ||
+      "https://sweetieayman.com";
+
+    res
+      .status(200)
+      .type("html")
+      .send(renderProductMetaHtml(product, siteUrl, "share"));
   } catch (error) {
     console.error("Share route error", error);
     res.status(500).type("html").send(`<!DOCTYPE html>

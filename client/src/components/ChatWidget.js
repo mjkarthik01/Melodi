@@ -25,7 +25,6 @@ const ChatWidget = () => {
         "",
         "Please provide more details.",
         "",
-        ` Product Link: ${shareUrl}`,
       ].join("\n");
     }
 
