@@ -887,9 +887,9 @@ a:hover {
 
 .product-detail__image {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 4.5 / 5;
   object-fit: cover;
-  object-position: 0 90%;
+  object-position: 0 85%;
 }
 
 .product-detail__info {

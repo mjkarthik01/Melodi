@@ -9,6 +9,7 @@ import SectionHeader from "../components/UI/SectionHeader";
 import { useCart } from "../context/cart";
 import { useChat } from "../context/chat";
 import { useWishlist } from "../context/wishlist";
+import { Badge } from "antd";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -159,17 +160,36 @@ const ProductDetails = () => {
     );
   }
 
+  const ribbonStyles = {
+    indicator: {
+      boxShadow: "4px 4px 4px 1px rgb(0 0 0 / 65%)",
+      padding: "calc(-0.7rem + 1.5625vw) calc(1.2rem + 1.5625vw)",
+    },
+    content: {
+      color: "#f7b538",
+      fontWeight: "bold",
+      letterSpacing: "5px",
+    },
+  };
+
   return (
     <>
       <section className="container product-detail section">
         <div className="product-detail__grid">
-          <div className="product-detail__visual">
-            <img
-              src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`}
-              alt={product.name}
-              className="product-detail__image"
-            />
-          </div>
+          <Badge.Ribbon
+            text="MELODI"
+            color="rgba(7, 70, 49, 0.83)"
+            styles={ribbonStyles}
+            placement="start"
+          >
+            <div className="product-detail__visual">
+              <img
+                src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`}
+                alt={product.name}
+                className="product-detail__image"
+              />
+            </div>
+          </Badge.Ribbon>
           <div className="product-detail__info">
             <p className="eyebrow">New arrival</p>
             <h1>{product.name}</h1>

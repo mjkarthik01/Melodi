@@ -8,7 +8,7 @@ const ChatWidget = () => {
   const [hasManualEdit, setHasManualEdit] = useState(false);
   const { chatProduct, selectedColor } = useChat();
 
-  const adminWhatsApp = "918870251610";
+  const adminWhatsApp = "918291895854";
 
   const generateMessage = useMemo(() => {
     if (chatProduct) {
