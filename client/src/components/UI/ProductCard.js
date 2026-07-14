@@ -1,6 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+
 import { Skeleton } from "antd";
-import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ProductCard = ({
   product,
@@ -10,18 +11,21 @@ const ProductCard = ({
   loading = false,
 }) => {
   const navigate = useNavigate();
-  const colorSliderRef = useRef(null);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgVisible, setImgVisible] = useState(false);
-  const [selectedColor, setSelectedColor] = useState("");
-  // const [displayRating, setDisplayRating] = useState(product?.rating || 0);
-  // const [ratingCount, setRatingCount] = useState(product?.ratingCount || 0);
-  // const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-  const [showColorsSection, setShowColorsSection] = useState(() => {
-    if (typeof window === "undefined") return true;
 
-    const savedValue = localStorage.getItem("productCardColorsVisible");
-    return savedValue === null ? true : savedValue === "true";
+  const colorSliderRef = useRef(null);
+
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  const [imgVisible, setImgVisible] = useState(false);
+
+  const [activeImage, setActiveImage] = useState(0);
+
+  const [selectedColor, setSelectedColor] = useState("");
+
+  const [showColorsSection, setShowColorsSection] = useState(() => {
+    const saved = localStorage.getItem("productCardColorsVisible");
+
+    return saved === null ? true : saved === "true";
   });
 
   const showSkeleton = loading || !imgLoaded;
@@ -30,139 +34,87 @@ const ProductCard = ({
     if (product?.colors?.length) {
       setSelectedColor(product.colors[0]);
     }
+
+    setActiveImage(0);
   }, [product]);
 
   useEffect(() => {
-    const readVisibility = () => {
-      if (typeof window === "undefined") return true;
+    const updateVisibility = () => {
+      const value = localStorage.getItem("productCardColorsVisible");
 
-      const savedValue = localStorage.getItem("productCardColorsVisible");
-      return savedValue === null ? true : savedValue === "true";
+      setShowColorsSection(value === null ? true : value === "true");
     };
 
-    const syncVisibility = () => {
-      setShowColorsSection(readVisibility());
-    };
+    window.addEventListener("product-card-colors-toggle", updateVisibility);
 
-    syncVisibility();
-
-    const handleVisibilityChange = (event) => {
-      setShowColorsSection(event?.detail?.show ?? readVisibility());
-    };
-
-    const handleStorageChange = (event) => {
-      if (event.key === "productCardColorsVisible") {
-        setShowColorsSection(
-          event.newValue === null ? true : event.newValue === "true",
-        );
-      }
-    };
-
-    window.addEventListener(
-      "product-card-colors-toggle",
-      handleVisibilityChange,
-    );
-    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("storage", updateVisibility);
 
     return () => {
       window.removeEventListener(
         "product-card-colors-toggle",
-        handleVisibilityChange,
+        updateVisibility,
       );
-      window.removeEventListener("storage", handleStorageChange);
+
+      window.removeEventListener("storage", updateVisibility);
     };
   }, []);
 
-  const smoothScrollBy = (element, distance, duration = 3000) => {
-    const start = element.scrollLeft;
-    const startTime = performance.now();
+  useEffect(() => {
+    if (!product?.photos || product.photos.length <= 1) return;
 
-    const easeInOutQuad = (t) =>
-      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const interval = setInterval(() => {
+      setActiveImage((prev) =>
+        prev === product.photos.length - 1 ? 0 : prev + 1,
+      );
+    }, 3000);
 
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+    return () => clearInterval(interval);
+  }, [product]);
 
-      const eased = easeInOutQuad(progress);
+  const nextImage = () => {
+    if (!product?.photos?.length) return;
 
-      element.scrollLeft = start + distance * eased;
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
-
-  const scrollColors = (direction) => {
-    const container = colorSliderRef.current;
-    if (!container) return;
-
-    const scrollAmount = 120;
-
-    smoothScrollBy(
-      container,
-      direction === "next" ? scrollAmount : -scrollAmount,
-      300, // duration (increase = slower, smoother)
+    setActiveImage((prev) =>
+      prev === product.photos.length - 1 ? 0 : prev + 1,
     );
   };
 
-  // const handleRatingChange = async (value) => {
-  //   const productId = product?._id;
+  const previousImage = () => {
+    if (!product?.photos?.length) return;
 
-  //   if (!productId) return;
+    setActiveImage((prev) =>
+      prev === 0 ? product.photos.length - 1 : prev - 1,
+    );
+  };
 
-  //   setDisplayRating(value);
+  const scrollColors = (direction) => {
+    if (!colorSliderRef.current) return;
 
-  //   if (!auth?.token) {
-  //     message.info("Please login to rate this product");
-  //     return;
-  //   }
+    colorSliderRef.current.scrollBy({
+      left: direction === "next" ? 120 : -120,
 
-  //   setIsSubmittingRating(true);
-
-  //   try {
-  //     const { data } = await axios.post(
-  //       `${process.env.REACT_APP_API}/api/v1/product/rate/${productId}`,
-  //       { value },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${auth.token}`,
-  //         },
-  //       },
-  //     );
-
-  //     if (data?.success) {
-  //       setDisplayRating(data?.product?.rating || value);
-  //       setRatingCount(data?.product?.ratingCount || ratingCount);
-  //       message.success("Thank you for your rating");
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to save product rating", error);
-  //     message.error("Unable to submit rating right now");
-  //   } finally {
-  //     setIsSubmittingRating(false);
-  //   }
-  // };
+      behavior: "smooth",
+    });
+  };
 
   return (
     <article className="product-card">
       <div className="product-card__media">
         {showSkeleton && (
-          <div>
-            <Skeleton.Image
-              active
-              style={{ width: "365px", height: "260px" }}
-            />
-          </div>
+          <Skeleton.Image
+            active
+            style={{
+              width: "100%",
+              height: "260px",
+            }}
+          />
         )}
 
         <img
           src={
-            product?._id &&
-            `${process.env.REACT_APP_API}/api/v1/product/product-photo/${product?._id}`
+            product?.photos?.length
+              ? product.photos[activeImage].url
+              : "/placeholder.png"
           }
           alt={product?.name}
           className={`product-card__image ${imgVisible ? "is-visible" : ""}`}
@@ -174,14 +126,41 @@ const ProductCard = ({
             setImgVisible(true);
           }}
           onError={(e) => {
-            e.target.src = "/placeholder.png";
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/placeholder.png";
             setImgLoaded(true);
             setImgVisible(true);
           }}
         />
 
-        {!showSkeleton && (
+        {!showSkeleton && product?.photos?.length > 0 && (
           <>
+            <button
+              type="button"
+              className="product-card__carousel-btn prev"
+              onClick={previousImage}
+            >
+              &#8249;
+            </button>
+
+            <button
+              type="button"
+              className="product-card__carousel-btn next"
+              onClick={nextImage}
+            >
+              &#8250;
+            </button>
+
+            <div className="product-card__dots">
+              {product.photos.map((_, index) => (
+                <span
+                  key={index}
+                  className={activeImage === index ? "active" : ""}
+                  onClick={() => setActiveImage(index)}
+                />
+              ))}
+            </div>
+
             {onWishlist && (
               <button
                 type="button"
@@ -202,24 +181,29 @@ const ProductCard = ({
           </>
         )}
       </div>
-
-      {/* BODY */}
+      {/* PRODUCT BODY */}
       <div className="product-card__body">
         {loading ? (
           <>
             <Skeleton.Input active size="small" style={{ width: 80 }} />
+
             <Skeleton.Input active style={{ width: "90%" }} />
+
             <Skeleton active paragraph={{ rows: 2 }} title={false} />
           </>
         ) : (
           <>
-            {/* <p className="product-card__category">{product?.category?.name}</p> */}
+            {/* TITLE */}
 
             <h3 className="product-card__title">{product?.name}</h3>
+
+            {/* DESCRIPTION */}
 
             <p className="product-card__excerpt">
               {product?.description?.substring(0, 90)}
             </p>
+
+            {/* PRICE */}
 
             <div className="product-card__meta">
               <span className="product-card__price">
@@ -227,18 +211,19 @@ const ProductCard = ({
                 <span className="text-decoration-line-through text-muted mx-2 fs-6">
                   &#8377;{" "}
                   {Math.round(
-                    product?.price + (product?.price * product.discount) / 100,
+                    product?.price + (product?.price * product?.discount) / 100,
                   )}
                 </span>
               </span>
             </div>
 
-            {showColorsSection && (
+            {/* COLORS */}
+
+            {showColorsSection && product?.colors?.length > 0 && (
               <div className="mb-3">
                 <strong className="text-muted">Select Color</strong>
 
                 <div className="d-flex align-items-center mt-2">
-                  {/* Prev button */}
                   <button
                     type="button"
                     className="btn btn-light btn--small"
@@ -247,7 +232,6 @@ const ProductCard = ({
                     ‹
                   </button>
 
-                  {/* Scroll container */}
                   <div
                     ref={colorSliderRef}
                     style={{
@@ -288,7 +272,6 @@ const ProductCard = ({
                     ))}
                   </div>
 
-                  {/* Next button */}
                   <button
                     type="button"
                     className="btn btn-light btn--small"

@@ -19,6 +19,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const { cart, setCart } = useCart();
   const [wishlist, setWishlist] = useWishlist();
+  const [activeImage, setActiveImage] = useState(0);
   const { setChatProduct, selectedColor, setSelectedColor } = useChat();
   const [showColorsSection, setShowColorsSection] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -51,6 +52,10 @@ const ProductDetails = () => {
       setSelectedColor("");
     };
   }, [setChatProduct, setSelectedColor]);
+
+  useEffect(() => {
+    setActiveImage(0);
+  }, [product]);
 
   useEffect(() => {
     const readVisibility = () => {
@@ -176,20 +181,41 @@ const ProductDetails = () => {
     <>
       <section className="container product-detail section">
         <div className="product-detail__grid">
-          <Badge.Ribbon
-            text="MELODI"
-            color="rgba(7, 70, 49, 0.83)"
-            styles={ribbonStyles}
-            placement="start"
-          >
-            <div className="product-detail__visual">
-              <img
-                src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`}
-                alt={product.name}
-                className="product-detail__image"
-              />
-            </div>
-          </Badge.Ribbon>
+          <div className="product-detail-gallery">
+            {/* Main Image */}
+            <Badge.Ribbon
+              text="MELODI"
+              color="rgba(7, 70, 49, 0.90)"
+              styles={ribbonStyles}
+              placement="start"
+            >
+              <div className="product-detail__visual">
+                <img
+                  src={
+                    product?.photos?.[activeImage]?.url ||
+                    product?.photos?.[0]?.url
+                  }
+                  alt={product.name}
+                  className="product-detail__image"
+                />
+              </div>
+            </Badge.Ribbon>
+            {product?.photos?.length > 1 && (
+              <div className="product-detail-thumbnails">
+                {product.photos.map((photo, index) => (
+                  <div
+                    key={photo.public_id}
+                    className={`thumbnail ${
+                      activeImage === index ? "active" : ""
+                    }`}
+                    onClick={() => setActiveImage(index)}
+                  >
+                    <img src={photo.url} alt={`${product.name}-${index}`} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="product-detail__info">
             <p className="eyebrow">New arrival</p>
             <h1>{product.name}</h1>

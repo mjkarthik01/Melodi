@@ -15,10 +15,13 @@ import { Column } from "@ant-design/plots";
 import AdminMenu from "../../components/Layout/AdminMenu";
 import { useAuth } from "../../context/auth";
 import { UploadOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [auth] = useAuth();
   const COLORS_VISIBILITY_KEY = "productCardColorsVisible";
+
+  const navigate = useNavigate();
 
   // Sales
   const [salesData, setSalesData] = useState([]);
@@ -184,11 +187,25 @@ const AdminDashboard = () => {
         <Col xs={24} md={18}>
           {/* Admin Info */}
           <Card title="Admin Dashboard">
-            <h5 className="text-muted">Admin Name : {auth?.user?.name}</h5>
+            <div className="d-flex justify-content-lg-between flex-column flex-md-row align-items-md-center">
+              <div className="mb-2">
+                <h5 className="text-muted">Admin Name : {auth?.user?.name}</h5>
 
-            <h5 className="text-muted">Admin Email : {auth?.user?.email}</h5>
+                <h5 className="text-muted">
+                  Admin Email : {auth?.user?.email}
+                </h5>
 
-            <h5 className="text-muted">Admin Contact : {auth?.user?.phone}</h5>
+                <h5 className="text-muted">
+                  Admin Contact : {auth?.user?.phone}
+                </h5>
+              </div>
+              <button
+                className="btn btn-secondary"
+                onClick={() => navigate("/dashboard/user/profile")}
+              >
+                Edit
+              </button>
+            </div>
           </Card>
 
           <Card title="Product Card Settings" style={{ marginTop: 20 }}>

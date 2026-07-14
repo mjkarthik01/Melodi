@@ -873,7 +873,7 @@ a:hover {
 
 .product-detail__grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.3fr 0.7fr;
   gap: 2.5rem;
   align-items: start;
 }
@@ -1966,4 +1966,149 @@ a:hover {
   text-align: center;
   margin-top: 6px;
   color: gray;
+}
+.product-card__media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.product-card__media:hover > .product-card__carousel-btn {
+  display: block;
+}
+
+.product-card__image {
+  display: block;
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.product-card__carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+.product-card__carousel-btn.prev {
+  left: 12px;
+}
+
+.product-card__carousel-btn.next {
+  right: 12px;
+}
+
+.product-card__carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.product-card__dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.product-card__dots span {
+  width: 8px;
+  height: 8px;
+  background: rgb(250, 248, 248);
+  border-radius: 50%;
+  opacity: 0.7;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+}
+
+.product-card__dots span.active {
+  opacity: 1;
+}
+
+.product-detail-gallery {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.product-detail-thumbnails {
+  width: 95px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.thumbnail {
+  width: 90px;
+  height: 90px;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: 0.25s;
+  background: #fff;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail:hover {
+  border-color: #198754;
+}
+
+.thumbnail.active {
+  border: 3px solid #198754;
+  transform: scale(1.05);
+}
+
+.product-detail__visual {
+  flex: 1;
+}
+
+.product-detail__image {
+  width: 100%;
+  height: 650px;
+  object-fit: cover;
+  border-radius: 14px;
+  background: #fafafa;
+}
+
+@media (max-width: 768px) {
+  .product-detail-gallery {
+    flex-direction: column;
+  }
+
+  .product-detail-thumbnails {
+    width: 90vw;
+    position: relative;
+    flex-direction: row;
+    overflow-x: scroll;
+    padding: 8px;
+  }
+
+  .thumbnail {
+    min-width: 80px;
+    height: 80px;
+  }
+
+  .product-detail__image {
+    height: 420px;
+  }
 }

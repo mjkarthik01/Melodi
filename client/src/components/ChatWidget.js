@@ -12,8 +12,6 @@ const ChatWidget = () => {
 
   const generateMessage = useMemo(() => {
     if (chatProduct) {
-      const shareUrl = `${window.location.origin}/product/${chatProduct.slug}`;
-
       return [
         "Hi 👋",
         "",

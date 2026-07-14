@@ -12,13 +12,11 @@ import {
   productCountController,
   productFiltersController,
   productListController,
-  productPhotoController,
   relatedProductController,
   searchProductController,
-  submitProductRatingController,
   updateProductController,
 } from "../controllers/productController.js";
-import formidable from "express-formidable";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -26,15 +24,13 @@ router.post(
   "/create-product",
   requireSignIN,
   isAdmin,
-  formidable(),
+  upload.array("photos", 10),
   createProductController,
 );
 
 router.get("/get-product", getProductController);
 router.get("/get-product/:slug", getSingleProductController);
 router.get("/get-product-by-id/:pid", getProductByIdController);
-router.get("/product-photo/:pid", productPhotoController);
-router.post("/rate/:pid", requireSignIN, submitProductRatingController);
 
 router.delete("/delete-product/:pid", deleteProductController);
 
@@ -42,7 +38,7 @@ router.put(
   "/update-product/:pid",
   requireSignIN,
   isAdmin,
-  formidable(),
+  upload.array("photos", 10),
   updateProductController,
 );
 

@@ -24,10 +24,16 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    photo: {
-      data: Buffer,
-      contentType: String,
-    },
+    photos: [
+      {
+        public_id: {
+          type: String,
+        },
+        url: {
+          type: String,
+        },
+      },
+    ],
     shipping: {
       type: Boolean,
     },
