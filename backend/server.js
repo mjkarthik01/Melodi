@@ -126,8 +126,8 @@ app.get("/shop/:location", (req, res) => {
       "https://sweetieayman.onrender.com";
     const meta = getLocationMetadata(locationName, siteUrl);
 
-    // Adjust build/index.html to public/index.html depending on your deployment directory setup
-    const templatePath = path.join(process.cwd(), "build", "index.html");
+    // For Next.js: look in ../client/public/index.html or fallback to ../client/.next
+    const templatePath = path.join(process.cwd(), "..", "client", "public", "index.html");
 
     fs.readFile(templatePath, "utf8", (err, htmlData) => {
       if (err) {
@@ -196,13 +196,12 @@ app.get("/share/product/:slug", async (req, res) => {
   }
 });
 
-// Serving remaining build-created static client components
-app.use(express.static(path.join(process.cwd(), "build")));
+// Serving remaining Next.js static client components
+app.use(express.static(path.join(process.cwd(), "..", "client", "public")));
 
-// Global fallback architecture
-//  ANOTHER GREAT OPTION
+// Global fallback architecture - serve Next.js public folder
 app.use((req, res) => {
-  res.sendFile(path.join(process.cwd(), "build", "index.html"));
+  res.sendFile(path.join(process.cwd(), "..", "client", "public", "index.html"));
 });
 
 const PORT = process.env.PORT || 8080;
