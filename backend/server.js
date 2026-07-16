@@ -69,7 +69,8 @@ const getLocationMetadata = (locationName, siteUrl) => {
 };
 
 const renderProductMetaHtml = (product, siteUrl, routeType = "product") => {
-  const productImageUrl = `${siteUrl}/api/v1/product/product-photo/${product._id}`;
+  const productImageUrl =
+    product.photos?.[0]?.url || `${siteUrl}/default-product.png`;
   const shareUrl = `${siteUrl}/${routeType === "share" ? "share/product" : "product"}/${product.slug}`;
   const description = `${product.description || "Premium product"}`
     .replace(/\s+/g, " ")
@@ -122,7 +123,7 @@ app.get("/shop/:location", (req, res) => {
     const siteUrl =
       process.env.CLIENT_URL ||
       process.env.APP_URL ||
-      "https://sweetieayman.com";
+      "https://sweetieayman.onrender.com";
     const meta = getLocationMetadata(locationName, siteUrl);
 
     // Adjust build/index.html to public/index.html depending on your deployment directory setup
@@ -162,7 +163,7 @@ app.get("/product/:slug", async (req, res) => {
     const siteUrl =
       process.env.CLIENT_URL ||
       process.env.APP_URL ||
-      "https://sweetieayman.com";
+      "https://sweetieayman.onrender.com";
     res.status(200).type("html").send(renderProductMetaHtml(product, siteUrl));
   } catch (error) {
     console.error("Product route error", error);
@@ -184,7 +185,7 @@ app.get("/share/product/:slug", async (req, res) => {
     const siteUrl =
       process.env.CLIENT_URL ||
       process.env.APP_URL ||
-      "https://sweetieayman.com";
+      "https://sweetieayman.onrender.com";
     res
       .status(200)
       .type("html")
