@@ -88,40 +88,34 @@ export const loginController = async (req, res) => {
 
     await user.save();
 
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL,
-        to: user.email,
-        subject: "Login OTP",
-        html: `
-          <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>Login Verification</h2>
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Login OTP",
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+          <h2>Login Verification</h2>
 
-            <p>Your verification code is:</p>
+          <p>Your verification code is:</p>
 
-            <h1 style="
-                letter-spacing:8px;
-                color:#0d6efd;
-                font-size:36px;
-            ">
-              ${otp}
-            </h1>
+          <h1 style="
+              letter-spacing:8px;
+              color:#0d6efd;
+              font-size:36px;
+          ">
+            ${otp}
+          </h1>
 
-            <p>
-              This OTP will expire in <strong>5 minutes</strong>.
-            </p>
+          <p>
+            This OTP will expire in <strong>5 minutes</strong>.
+          </p>
 
-            <p>
-              If you didn't request this code, please ignore this email.
-            </p>
-          </div>
-        `,
-      });
-    } catch (emailError) {
-      console.error("Email sending error:", emailError.message);
-      // Still allow login to proceed even if email fails
-      console.error("OTP saved but email failed to send. OTP:", otp);
-    }
+          <p>
+            If you didn't request this code, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
 
     return res.send({
       success: true,
@@ -130,12 +124,9 @@ export const loginController = async (req, res) => {
       email,
     });
   } catch (error) {
-    console.error("Login error:", error);
     res.status(500).send({
       success: false,
       message: "Error in login",
-      error:
-        process.env.DEV_MODE === "development" ? error.message : "Server error",
     });
   }
 };
@@ -227,51 +218,46 @@ export const resendOTPController = async (req, res) => {
     await user.save();
 
     // Send email
-    try {
-      await transporter.sendMail({
-        from: process.env.EMAIL,
-        to: user.email,
-        subject: "Your New Login OTP",
-        html: `
-          <div style="font-family:Arial,sans-serif;padding:20px">
-            <h2>Login Verification</h2>
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Your New Login OTP",
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+          <h2>Login Verification</h2>
 
-            <p>Your new verification code is:</p>
+          <p>Your new verification code is:</p>
 
-            <h1 style="
-                letter-spacing:8px;
-                color:#0d6efd;
-                font-size:36px;
-            ">
-              ${otp}
-            </h1>
+          <h1 style="
+              letter-spacing:8px;
+              color:#0d6efd;
+              font-size:36px;
+          ">
+            ${otp}
+          </h1>
 
-            <p>
-              This OTP will expire in <strong>5 minutes</strong>.
-            </p>
+          <p>
+            This OTP will expire in <strong>5 minutes</strong>.
+          </p>
 
-            <p>
-              If you didn't request this code, please ignore this email.
-            </p>
-          </div>
-        `,
-      });
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError.message);
-      // Continue even if email fails
-    }
+          <p>
+            If you didn't request this code, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
 
     res.status(200).send({
       success: true,
-      message: "OTP sent successfully",
+      message: `OTP sent successfully ${otp}`,
     });
   } catch (error) {
-    console.error("Resend OTP error:", error);
+    console.error(error);
 
     res.status(500).send({
       success: false,
       message: "Failed to resend OTP",
-      error: process.env.DEV_MODE === "development" ? error.message : "Server error",
+      error: error.message,
     });
   }
 };
