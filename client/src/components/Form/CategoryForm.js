@@ -1,6 +1,6 @@
 import React from "react";
 
-const CategoryForm = ({ handleSubmit, value, setValue }) => {
+const CategoryForm = ({ handleSubmit, value, setValue, editForm }) => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -14,7 +14,7 @@ const CategoryForm = ({ handleSubmit, value, setValue }) => {
           />
           <button className="btn btn-primary btn-icon mt-3" type="submit">
             <i className="bi bi-plus-circle-fill" />
-            <span>Add Category</span>
+            <span>{editForm ? "Update Category" : "Add Category"}</span>
           </button>
         </div>
       </form>

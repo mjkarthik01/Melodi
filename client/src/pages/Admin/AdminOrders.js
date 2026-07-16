@@ -154,11 +154,7 @@ const AdminOrders = () => {
       {record?.products?.map((product) => (
         <Card key={product._id} size="small">
           <Space align="start">
-            <Avatar
-              shape="square"
-              size={80}
-              src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${product._id}`}
-            />
+            <Avatar shape="square" size={80} src={product.photos?.[0]?.url} />
 
             <div>
               <h5>{product.name}</h5>

@@ -10,6 +10,8 @@ import {
   orderStatusController,
   getMonthlySalesController,
   getAllUsersController,
+  verifyOTPController,
+  resendOTPController,
 } from "../controllers/authController.js";
 import { isAdmin, requireSignIN } from "../middlewares/authMiddleware.js";
 
@@ -17,6 +19,8 @@ const router = express.Router();
 
 router.post("/register", registerController);
 router.post("/login", loginController);
+router.post("/verify-otp", verifyOTPController);
+router.post("/resend-otp", resendOTPController);
 router.post("/forgot-password", forgotPasswordController);
 router.get("/test", requireSignIN, isAdmin, testController);
 router.get("/user-auth", requireSignIN, (req, res) => {

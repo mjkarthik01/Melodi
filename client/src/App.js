@@ -36,6 +36,7 @@ import Layout from "./components/Layout/Layout";
 import AdminAccount from "./pages/Admin/AdminAccount";
 import CreateCoupon from "./pages/Admin/CreateCoupon";
 import CouponRedirect from "./pages/CouponRedirect";
+import VerifyOTP from "./pages/Auth/VerifyOTP";
 
 const RedirectToProduct = () => {
   const { slug } = useParams();
@@ -86,6 +87,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="*" element={<PageNotFound />} />
           </Routes>
         </AnimatedRoutes>

@@ -321,7 +321,7 @@ const CartPage = () => {
                   >
                     <div className="col-3 col-md-2">
                       <img
-                        src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
+                        src={p.photos?.[0]?.url}
                         alt={p.name}
                         className="cart-item__image"
                       />

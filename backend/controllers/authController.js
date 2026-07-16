@@ -2,6 +2,7 @@ import { comparePassword, hashPassword } from "./../helpers/authHelper.js";
 import UserModel from "../models/UserModel.js";
 import JWT from "jsonwebtoken";
 import OrderModel from "../models/OrderModel.js";
+import { transporter } from "../config/mail.js";
 
 export const registerController = async (req, res) => {
   try {
@@ -61,33 +62,115 @@ export const registerController = async (req, res) => {
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(404).send({
-        success: false,
-        message: "Invalid Email or Password",
-      });
-    }
+
     const user = await UserModel.findOne({ email });
+
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "Email is not registered",
+        message: "Email not registered",
       });
     }
+
     const match = await comparePassword(password, user.password);
+
     if (!match) {
-      return res.status(200).send({
+      return res.send({
         success: false,
         message: "Invalid password",
       });
     }
 
-    const token = await JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Login OTP",
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+          <h2>Login Verification</h2>
+
+          <p>Your verification code is:</p>
+
+          <h1 style="
+              letter-spacing:8px;
+              color:#0d6efd;
+              font-size:36px;
+          ">
+            ${otp}
+          </h1>
+
+          <p>
+            This OTP will expire in <strong>5 minutes</strong>.
+          </p>
+
+          <p>
+            If you didn't request this code, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
+    return res.send({
+      success: true,
+      otpSent: true,
+      message: "OTP sent successfully",
+      email,
+    });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Error in login",
+    });
+  }
+};
+
+export const verifyOTPController = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (String(user.otp).trim() !== String(otp).trim()) {
+      return res.send({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    if (!user.otpExpiry || user.otpExpiry.getTime() < Date.now()) {
+      return res.send({
+        success: false,
+        message: "OTP Expired",
+      });
+    }
+
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+
+    const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
-    res.status(200).send({
+
+    res.send({
       success: true,
-      message: "Login successful",
+      message: "Login Successful",
+      token,
       user: {
         name: user.name,
         email: user.email,
@@ -96,13 +179,85 @@ export const loginController = async (req, res) => {
         addresses: user.addresses,
         role: user.role,
       },
-      token,
     });
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "Error in Login",
-      error,
+      message: "OTP verification failed",
+    });
+  }
+};
+
+export const resendOTPController = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).send({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Generate new 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Save OTP
+    user.otp = otp;
+    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+    await user.save();
+
+    // Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: user.email,
+      subject: "Your New Login OTP",
+      html: `
+        <div style="font-family:Arial,sans-serif;padding:20px">
+          <h2>Login Verification</h2>
+
+          <p>Your new verification code is:</p>
+
+          <h1 style="
+              letter-spacing:8px;
+              color:#0d6efd;
+              font-size:36px;
+          ">
+            ${otp}
+          </h1>
+
+          <p>
+            This OTP will expire in <strong>5 minutes</strong>.
+          </p>
+
+          <p>
+            If you didn't request this code, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
+    res.status(200).send({
+      success: true,
+      message: `OTP sent successfully ${otp}`,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      success: false,
+      message: "Failed to resend OTP",
+      error: error.message,
     });
   }
 };

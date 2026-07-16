@@ -89,11 +89,7 @@ const Orders = () => {
         {record?.products?.map((p) => (
           <Card key={p._id} size="small">
             <Space>
-              <Avatar
-                shape="square"
-                size={70}
-                src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
-              />
+              <Avatar shape="square" size={70} src={p.photos?.[0]?.url} />
 
               <div>
                 <Text strong>{p.name}</Text>

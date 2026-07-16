@@ -291,6 +291,7 @@ const CreateCategory = () => {
           value={updatedName}
           setValue={setUpdatedName}
           handleSubmit={handleUpdate}
+          editForm
         />
       </Modal>
     </div>
