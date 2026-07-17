@@ -3,6 +3,9 @@ import UserModel from "../models/UserModel.js";
 import JWT from "jsonwebtoken";
 import OrderModel from "../models/OrderModel.js";
 import { transporter } from "../config/mail.js";
+import apiInstance from "../config/brevo.js";
+
+const email = new Brevo.SendSmtpEmail();
 
 export const registerController = async (req, res) => {
   try {
@@ -88,35 +91,36 @@ export const loginController = async (req, res) => {
 
     await user.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: user.email,
-      subject: "Login OTP",
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:20px">
-          <h2>Login Verification</h2>
+    email.sender = {
+      name: "SweetieAyman",
+      email: process.env.EMAIL,
+    };
 
-          <p>Your verification code is:</p>
+    email.to = [
+      {
+        email: user.email,
+      },
+    ];
 
-          <h1 style="
-              letter-spacing:8px;
-              color:#0d6efd;
-              font-size:36px;
-          ">
-            ${otp}
-          </h1>
+    email.subject = "Login OTP";
 
-          <p>
-            This OTP will expire in <strong>5 minutes</strong>.
-          </p>
+    email.htmlContent = `
+<div style="font-family:Arial">
 
-          <p>
-            If you didn't request this code, please ignore this email.
-          </p>
-        </div>
-      `,
-    });
+<h2>Login Verification</h2>
 
+<p>Your OTP is</p>
+
+<h1 style="letter-spacing:8px;color:#ff4d6d">
+${otp}
+</h1>
+
+<p>OTP expires in 5 minutes.</p>
+
+</div>
+`;
+
+    await apiInstance.sendTransacEmail(email);
     return res.send({
       success: true,
       otpSent: true,
@@ -208,7 +212,7 @@ export const resendOTPController = async (req, res) => {
       });
     }
 
-    // Generate new 6-digit OTP
+    // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Save OTP
@@ -217,42 +221,58 @@ export const resendOTPController = async (req, res) => {
 
     await user.save();
 
-    // Send email
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: user.email,
-      subject: "Your New Login OTP",
-      html: `
-        <div style="font-family:Arial,sans-serif;padding:20px">
-          <h2>Login Verification</h2>
+    // Create email
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
 
-          <p>Your new verification code is:</p>
+    sendSmtpEmail.sender = {
+      name: "Sweetie Ayman",
+      email: process.env.EMAIL, // Verified sender email in Brevo
+    };
+
+    sendSmtpEmail.to = [
+      {
+        email: user.email,
+      },
+    ];
+
+    sendSmtpEmail.subject = "Your New Login OTP";
+
+    sendSmtpEmail.htmlContent = `
+      <div style="font-family:Arial,sans-serif;padding:30px;background:#f7f7f7;">
+        <div style="max-width:500px;margin:auto;background:#ffffff;padding:30px;border-radius:10px;text-align:center;">
+          <h2 style="color:#333;">Login Verification</h2>
+
+          <p>Your new One-Time Password (OTP) is</p>
 
           <h1 style="
               letter-spacing:8px;
+              font-size:38px;
               color:#0d6efd;
-              font-size:36px;
+              margin:20px 0;
           ">
             ${otp}
           </h1>
 
           <p>
-            This OTP will expire in <strong>5 minutes</strong>.
+            This OTP is valid for
+            <strong>5 minutes</strong>.
           </p>
 
-          <p>
-            If you didn't request this code, please ignore this email.
+          <p style="color:#888;font-size:14px;">
+            If you didn't request this OTP, please ignore this email.
           </p>
         </div>
-      `,
-    });
+      </div>
+    `;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
 
     res.status(200).send({
       success: true,
-      message: `OTP sent successfully ${otp}`,
+      message: "OTP sent successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Brevo Error:", error);
 
     res.status(500).send({
       success: false,
