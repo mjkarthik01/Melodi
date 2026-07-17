@@ -2,10 +2,6 @@ import { comparePassword, hashPassword } from "./../helpers/authHelper.js";
 import UserModel from "../models/UserModel.js";
 import JWT from "jsonwebtoken";
 import OrderModel from "../models/OrderModel.js";
-import { transporter } from "../config/mail.js";
-import apiInstance from "../config/brevo.js";
-
-const email = new Brevo.SendSmtpEmail();
 
 export const registerController = async (req, res) => {
   try {
@@ -84,94 +80,11 @@ export const loginController = async (req, res) => {
       });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000;
-
-    await user.save();
-
-    email.sender = {
-      name: "SweetieAyman",
-      email: process.env.EMAIL,
-    };
-
-    email.to = [
-      {
-        email: user.email,
-      },
-    ];
-
-    email.subject = "Login OTP";
-
-    email.htmlContent = `
-<div style="font-family:Arial">
-
-<h2>Login Verification</h2>
-
-<p>Your OTP is</p>
-
-<h1 style="letter-spacing:8px;color:#ff4d6d">
-${otp}
-</h1>
-
-<p>OTP expires in 5 minutes.</p>
-
-</div>
-`;
-
-    await apiInstance.sendTransacEmail(email);
-    return res.send({
-      success: true,
-      otpSent: true,
-      message: "OTP sent successfully",
-      email,
-    });
-  } catch (error) {
-    res.status(500).send({
-      success: false,
-      message: "Error in login",
-    });
-  }
-};
-
-export const verifyOTPController = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const user = await UserModel.findOne({ email });
-
-    if (!user) {
-      return res.send({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    if (String(user.otp).trim() !== String(otp).trim()) {
-      return res.send({
-        success: false,
-        message: "Invalid OTP",
-      });
-    }
-
-    if (!user.otpExpiry || user.otpExpiry.getTime() < Date.now()) {
-      return res.send({
-        success: false,
-        message: "OTP Expired",
-      });
-    }
-
-    user.otp = null;
-    user.otpExpiry = null;
-
-    await user.save();
-
     const token = JWT.sign({ _id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    res.send({
+    return res.send({
       success: true,
       message: "Login Successful",
       token,
@@ -187,97 +100,7 @@ export const verifyOTPController = async (req, res) => {
   } catch (error) {
     res.status(500).send({
       success: false,
-      message: "OTP verification failed",
-    });
-  }
-};
-
-export const resendOTPController = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).send({
-        success: false,
-        message: "Email is required",
-      });
-    }
-
-    const user = await UserModel.findOne({ email });
-
-    if (!user) {
-      return res.status(404).send({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    // Generate new OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Save OTP
-    user.otp = otp;
-    user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-
-    await user.save();
-
-    // Create email
-    const sendSmtpEmail = new Brevo.SendSmtpEmail();
-
-    sendSmtpEmail.sender = {
-      name: "Sweetie Ayman",
-      email: process.env.EMAIL, // Verified sender email in Brevo
-    };
-
-    sendSmtpEmail.to = [
-      {
-        email: user.email,
-      },
-    ];
-
-    sendSmtpEmail.subject = "Your New Login OTP";
-
-    sendSmtpEmail.htmlContent = `
-      <div style="font-family:Arial,sans-serif;padding:30px;background:#f7f7f7;">
-        <div style="max-width:500px;margin:auto;background:#ffffff;padding:30px;border-radius:10px;text-align:center;">
-          <h2 style="color:#333;">Login Verification</h2>
-
-          <p>Your new One-Time Password (OTP) is</p>
-
-          <h1 style="
-              letter-spacing:8px;
-              font-size:38px;
-              color:#0d6efd;
-              margin:20px 0;
-          ">
-            ${otp}
-          </h1>
-
-          <p>
-            This OTP is valid for
-            <strong>5 minutes</strong>.
-          </p>
-
-          <p style="color:#888;font-size:14px;">
-            If you didn't request this OTP, please ignore this email.
-          </p>
-        </div>
-      </div>
-    `;
-
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-
-    res.status(200).send({
-      success: true,
-      message: "OTP sent successfully",
-    });
-  } catch (error) {
-    console.error("Brevo Error:", error);
-
-    res.status(500).send({
-      success: false,
-      message: "Failed to resend OTP",
-      error: error.message,
+      message: "Error in login",
     });
   }
 };

@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [, setAuth] = useAuth();
 
   const navigate = useNavigate();
 
@@ -23,11 +25,12 @@ const Login = () => {
 
       if (res.data.success) {
         toast.success(res.data.message);
-        localStorage.setItem("otpEmail", email);
-        navigate("/verify-otp", {
-          state: { email },
+        setAuth({
+          user: res.data.user,
+          token: res.data.token,
+          initialized: true,
         });
-
+        navigate("/");
         return;
       }
 
