@@ -12,3 +12,11 @@ export const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD,
   },
 });
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP Connection Error Log:", error);
+  } else {
+    console.log("Server is ready to send emails!");
+  }
+});
